@@ -1,0 +1,50 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
+import type { AuthMeClientState } from '@/lib/auth/authMeClient';
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [authMe, setAuthMe] = useState<AuthMeClientState>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 960px)');
+    const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : { authenticated: false }))
+      .then(setAuthMe)
+      .catch(() => setAuthMe({ authenticated: false }));
+  }, []);
+
+  const onToggleCollapsed = useCallback(() => setCollapsed((c) => !c), []);
+  const onCloseMobile = useCallback(() => setMobileOpen(false), []);
+  const onToggleMobileSidebar = useCallback(() => setMobileOpen((o) => !o), []);
+
+  return (
+    <>
+      <Sidebar
+        collapsed={collapsed}
+        onToggleCollapsed={onToggleCollapsed}
+        isMobile={isMobile}
+        mobileOpen={mobileOpen}
+        onCloseMobile={onCloseMobile}
+        authMe={authMe}
+        setAuthMe={setAuthMe}
+      />
+      <main className="main-content">
+        <Topbar showSidebarToggle={isMobile} onToggleSidebar={onToggleMobileSidebar} />
+        <div className="page-container">{children}</div>
+      </main>
+    </>
+  );
+}

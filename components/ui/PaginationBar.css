@@ -1,0 +1,67 @@
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.page-num,
+.page-nav {
+  background: transparent;
+  border: 1px solid transparent;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.page-num.active {
+  background-color: var(--success);
+  color: white;
+  font-weight: 600;
+}
+
+.page-num:not(.active):not(:disabled):hover,
+.page-nav:not(:disabled):hover {
+  background-color: var(--bg-primary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.page-nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-ellipsis {
+  color: var(--text-secondary);
+  font-weight: bold;
+  padding: 0 0.5rem;
+  user-select: none;
+}
+
+/* Dashboard table card: tighter top margin */
+.dashboard-table-card .pagination {
+  margin-top: 0.9rem;
+  padding-top: 0.5rem;
+}

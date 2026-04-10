@@ -1,0 +1,149 @@
+.page-container:has(.clients-page) {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  padding-left: clamp(1rem, 2.8vw, 2rem);
+  padding-right: clamp(1rem, 2.8vw, 2rem);
+}
+
+.clients-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 1200px;
+}
+
+.clients-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.clients-title-block h1 {
+  margin: 0 0 0.2rem 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.clients-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.clients-add-btn {
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  padding: 0.38rem 0.8rem;
+  border-radius: 8px;
+}
+
+.clients-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.clients-card .table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.clients-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.clients-table thead {
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 0 var(--border-color);
+}
+
+.clients-table th,
+.clients-table td {
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.clients-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.clients-table td {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.clients-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.clients-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-primary) 6%, transparent);
+}
+
+.clients-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.client-name-cell {
+  font-weight: 600;
+}
+
+.client-actions-cell {
+  white-space: nowrap;
+}
+
+.client-action-link,
+.client-action-delete {
+  color: var(--text-secondary);
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.client-action-link {
+  margin-right: 0.45rem;
+}
+
+.client-action-link:hover {
+  color: var(--accent-primary);
+  background: var(--accent-light);
+}
+
+.client-action-delete {
+  color: var(--danger);
+}
+
+.client-action-delete:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+@media (max-width: 900px) {
+  .clients-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .clients-add-btn {
+    align-self: flex-start;
+  }
+}

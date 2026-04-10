@@ -1,0 +1,279 @@
+/* Due date range — match reference card: bold dark Mo–Su (same ink as title), soft divider,
+   ghost outside days, hover = light gray-blue circle, range = ring start + green end. */
+.date-range-calendar {
+  background-color: #ffffff;
+}
+
+.date-range-calendar .rdp-root {
+  --cal-accent: var(--accent-primary, var(--primary));
+  --cal-accent-hover: var(--accent-hover, color-mix(in oklch, var(--primary) 72%, black));
+  --cal-text: #1e293b;
+  --cal-muted: #64748b;
+  --cal-outside: #cbd5e1;
+  /* Reference: hover = very light gray-blue disc */
+  --cal-hover-bg: #e8eef5;
+
+  --rdp-accent-color: var(--cal-accent);
+  --rdp-accent-background-color: transparent;
+  --rdp-range_middle-background-color: transparent;
+  --rdp-range_middle-color: var(--cal-text);
+  --rdp-outside-opacity: 1;
+  --rdp-day-width: 38px;
+  --rdp-day-height: 38px;
+  --rdp-day_button-width: 36px;
+  --rdp-day_button-height: 36px;
+  --rdp-day_button-border-radius: 999px;
+  --rdp-day_button-border: 2px solid transparent;
+  --rdp-nav_button-width: 2.125rem;
+  --rdp-nav_button-height: 2.125rem;
+  --rdp-nav-height: 2.625rem;
+  --rdp-weekday-padding: 0.4rem 0 0.45rem;
+  --rdp-gradient-direction: 90deg;
+
+  margin: 0;
+  background-color: #ffffff;
+}
+
+.date-range-calendar .rdp-months {
+  justify-content: center;
+  width: 100%;
+}
+
+/* Globals apply `table { width:100% }` and `th,td { padding: 1.25rem 1rem }` — that
+   blows up RDP’s calendar grid and overflows the popover (Mo/Su “outside” the card). */
+.date-range-calendar table {
+  width: auto;
+  max-width: 100%;
+}
+
+.date-range-calendar .rdp-month_grid {
+  margin-inline: auto;
+  border: none;
+}
+
+.date-range-calendar .rdp-month_grid th,
+.date-range-calendar .rdp-month_grid td {
+  padding: 0;
+  border: none;
+  background: transparent;
+  vertical-align: middle;
+  text-align: center;
+  font-size: inherit;
+  font-weight: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.date-range-calendar .rdp-month_grid thead th {
+  background: transparent;
+  color: inherit;
+  border-bottom: 1px solid #e8ecf0;
+}
+
+.date-range-calendar .rdp-month_grid tbody tr:hover td {
+  background: transparent;
+  opacity: 1;
+}
+
+.date-range-calendar .rdp-month_grid tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Library default blows up selected-day typography and breaks alignment */
+.date-range-calendar .rdp-selected {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+/* Drop default cap gradients; middle band comes from .rdp-range_middle only */
+.date-range-calendar .rdp-range_start,
+.date-range-calendar .rdp-range_end {
+  background: transparent;
+}
+
+.date-range-calendar .rdp-range_start.rdp-range_end {
+  background: transparent;
+}
+
+/* Month title — centered, bold navy (reference) */
+.date-range-calendar .rdp-month_caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: var(--rdp-nav-height);
+  margin-bottom: 0.125rem;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.date-range-calendar .rdp-caption_label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--cal-text);
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+/* Nav chevrons — dark grey, discrete hover */
+.date-range-calendar .rdp-button_previous,
+.date-range-calendar .rdp-button_next {
+  border-radius: 999px;
+  color: #475569;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.date-range-calendar .rdp-button_previous:hover,
+.date-range-calendar .rdp-button_next:hover {
+  background: #f1f5f9;
+  color: var(--cal-text);
+}
+
+.date-range-calendar .rdp-button_previous:focus-visible,
+.date-range-calendar .rdp-button_next:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--cal-accent) 45%, #cbd5e1);
+  outline-offset: 2px;
+}
+
+.date-range-calendar .rdp-chevron {
+  fill: currentColor;
+  opacity: 1;
+}
+
+/* Weekdays — compact, still dark (slightly smaller than month title) */
+.date-range-calendar .rdp-weekday {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--cal-text);
+  text-transform: none;
+  letter-spacing: 0.03em;
+  opacity: 1;
+}
+
+/* Outside-month — light gray, clearly secondary */
+.date-range-calendar .rdp-outside .rdp-day_button {
+  color: var(--cal-outside);
+  font-weight: 400;
+}
+
+/* In-month numbers — clear navy, comfortable grid */
+.date-range-calendar .rdp-day_button {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--cal-text);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.date-range-calendar .rdp-day_button:hover:not(:disabled) {
+  background-color: var(--cal-hover-bg) !important;
+  color: var(--cal-text) !important;
+  border-color: transparent !important;
+}
+
+/* In-between range days: no fill band — same as normal days (reference) */
+.date-range-calendar .rdp-range_middle {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+.date-range-calendar .rdp-range_middle .rdp-day_button {
+  border-radius: var(--rdp-day_button-border-radius);
+  border: 2px solid transparent;
+  background: transparent !important;
+  color: var(--cal-text);
+  font-weight: 500;
+}
+
+/* Range start: thin dark ring, numeral stays dark on white */
+.date-range-calendar .rdp-range_start:not(.rdp-range_end) .rdp-day_button {
+  background-color: #ffffff !important;
+  color: var(--cal-text) !important;
+  border: 2px solid #334155 !important;
+  font-weight: 600;
+  box-shadow: none;
+  z-index: 1;
+}
+
+.date-range-calendar .rdp-range_start:not(.rdp-range_end) .rdp-day_button:hover {
+  background-color: var(--cal-hover-bg) !important;
+}
+
+/* Range end: solid brand green, white numeral */
+.date-range-calendar .rdp-range_end:not(.rdp-range_start) .rdp-day_button,
+.date-range-calendar .rdp-range_end.rdp-range_start .rdp-day_button {
+  background-color: var(--cal-accent) !important;
+  color: #ffffff !important;
+  border: 2px solid var(--cal-accent) !important;
+  font-weight: 600;
+  box-shadow: 0 1px 3px color-mix(in oklch, var(--cal-accent) 28%, transparent);
+}
+
+.date-range-calendar .rdp-range_end:not(.rdp-range_start) .rdp-day_button:hover,
+.date-range-calendar .rdp-range_end.rdp-range_start .rdp-day_button:hover {
+  background-color: var(--cal-accent-hover) !important;
+  color: #ffffff !important;
+  border-color: var(--cal-accent-hover) !important;
+}
+
+.date-range-calendar .rdp-range_start.rdp-range_end {
+  background: transparent;
+}
+
+/* Today (not in range): faint ring */
+.date-range-calendar .rdp-today:not(.rdp-range_start):not(.rdp-range_end):not(.rdp-range_middle) .rdp-day_button {
+  border-color: rgb(100 116 139 / 0.35);
+  font-weight: 600;
+}
+
+.dark .date-range-calendar {
+  background-color: var(--bg-secondary, #1e293b);
+}
+
+.dark .date-range-calendar .rdp-root {
+  --cal-text: #f8fafc;
+  --cal-muted: #94a3b8;
+  --cal-outside: #64748b;
+  --cal-hover-bg: color-mix(in srgb, #94a3b8 22%, #1e293b);
+
+  background-color: var(--bg-secondary, #1e293b);
+}
+
+.dark .date-range-calendar .rdp-month_grid thead th {
+  border-bottom-color: rgb(51 65 85 / 0.65);
+}
+
+.dark .date-range-calendar .rdp-caption_label,
+.dark .date-range-calendar .rdp-day_button {
+  color: var(--cal-text);
+}
+
+.dark .date-range-calendar .rdp-weekday {
+  color: var(--cal-text);
+  font-weight: 600;
+}
+
+.dark .date-range-calendar .rdp-button_previous,
+.dark .date-range-calendar .rdp-button_next {
+  color: #94a3b8;
+}
+
+.dark .date-range-calendar .rdp-button_previous:hover,
+.dark .date-range-calendar .rdp-button_next:hover {
+  background: color-mix(in srgb, #fff 8%, transparent);
+  color: var(--cal-text);
+}
+
+.dark .date-range-calendar .rdp-chevron {
+  fill: var(--cal-text);
+  opacity: 0.9;
+}
+
+.dark .date-range-calendar .rdp-range_start:not(.rdp-range_end) .rdp-day_button {
+  background-color: var(--bg-secondary, #1e293b) !important;
+  color: var(--cal-text) !important;
+  border-color: #e2e8f0 !important;
+}

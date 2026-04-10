@@ -1,0 +1,309 @@
+'use client';
+
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { flushSync } from 'react-dom';
+import { usePathname, useRouter } from 'next/navigation';
+import { Search, Bell, ChevronDown, MoonStar, SunMedium, MessageCircle, PanelLeft } from 'lucide-react';
+import { formatUserDisplayName } from '@/lib/formatUserDisplayName';
+import {
+  applyTheme,
+  getServerThemeSnapshot,
+  getThemeSnapshot,
+  subscribeTheme,
+  type Theme,
+} from '@/components/layout/themeStore';
+import './Topbar.css';
+
+type MeResponse = {
+  authenticated: boolean;
+  user?: { email: string; firstName: string; lastName: string };
+};
+
+type GlobalSuggestion = {
+  id: string;
+  kind: 'invoice' | 'payment' | 'receipt' | 'client' | 'service' | 'task' | 'keyword';
+  label: string;
+  subLabel?: string;
+  href: string;
+  badge?: string;
+};
+
+function initialsForUser(user: { firstName: string; lastName: string; email: string }): string {
+  const f = user.firstName.trim();
+  const l = user.lastName.trim();
+  if (f && l) return `${f[0]}${l[0]}`.toUpperCase();
+  if (f.length >= 2) return f.slice(0, 2).toUpperCase();
+  if (f) return `${f[0]}${(l[0] ?? user.email[0] ?? '?')}`.toUpperCase();
+  if (l.length >= 2) return l.slice(0, 2).toUpperCase();
+  if (l) return `${l[0]}${(user.email[0] ?? '?')}`.toUpperCase();
+  const e = user.email.trim();
+  return e.length >= 2 ? e.slice(0, 2).toUpperCase() : e ? `${e[0]}?`.toUpperCase() : '?';
+}
+
+function topbarTitleForPath(pathname: string): string {
+  if (pathname === '/' || pathname === '') return 'Dashboard';
+  if (pathname.startsWith('/finance')) return 'Financial';
+  if (pathname.startsWith('/invoices/new')) return 'New invoice';
+  if (/^\/invoices\/[^/]+$/.test(pathname)) return 'Invoice';
+  if (pathname.startsWith('/invoices')) return 'Invoices';
+  if (pathname.startsWith('/clients/new')) return 'New client';
+  if (pathname.startsWith('/clients')) return 'Clients';
+  if (pathname.startsWith('/services/new')) return 'New service';
+  if (pathname.startsWith('/services')) return 'Services';
+  if (/^\/receipts\/[^/]+$/.test(pathname)) return 'Receipt';
+  if (pathname.startsWith('/receipts')) return 'Receipts';
+  if (pathname.startsWith('/search')) return 'Search';
+  if (pathname.startsWith('/signup')) return 'Create account';
+  if (pathname.startsWith('/login')) return 'Sign in';
+  if (pathname.startsWith('/tasks')) return 'Tasks';
+  return 'Dashboard';
+}
+
+export default function Topbar({
+  onToggleSidebar,
+  showSidebarToggle = false,
+}: {
+  onToggleSidebar?: () => void;
+  showSidebarToggle?: boolean;
+}) {
+  const pathname = usePathname() ?? '';
+  const router = useRouter();
+  const title = topbarTitleForPath(pathname);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const searchWrapRef = useRef<HTMLDivElement>(null);
+  const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
+  const [kbdHint, setKbdHint] = useState('⌘K');
+  const [me, setMe] = useState<MeResponse | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [suggestions, setSuggestions] = useState<GlobalSuggestion[]>([]);
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const refreshMe = useCallback(() => {
+    fetch('/api/auth/me')
+      .then((r) => (r.ok ? r.json() : { authenticated: false }))
+      .then(setMe)
+      .catch(() => setMe({ authenticated: false }));
+  }, []);
+
+  useEffect(() => {
+    refreshMe();
+  }, [refreshMe]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mac = /Mac|iPhone|iPod|iPad/i.test(navigator.platform ?? navigator.userAgent);
+    setKbdHint(mac ? '⌘K' : 'Ctrl+K');
+  }, []);
+
+  useLayoutEffect(() => {
+    if (typeof document === 'undefined') return;
+    const t = getThemeSnapshot();
+    document.documentElement.classList.toggle('dark', t === 'dark');
+  }, [theme]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
+        setSuggestOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
+  useEffect(() => {
+    const q = searchTerm.trim();
+    if (q.length < 1) {
+      setSuggestions([]);
+      setSearchLoading(false);
+      setSuggestOpen(false);
+      return;
+    }
+    setSearchLoading(true);
+    setSuggestOpen(true);
+    const t = window.setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(q)}&limit=10`);
+        if (!res.ok) throw new Error('Suggestion request failed');
+        const body = (await res.json()) as { suggestions?: GlobalSuggestion[] };
+        setSuggestions(Array.isArray(body.suggestions) ? body.suggestions : []);
+        setSuggestOpen(true);
+      } catch {
+        setSuggestions([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 110);
+    return () => window.clearTimeout(t);
+  }, [searchTerm]);
+
+  const submitSearch = () => {
+    const q = searchTerm.trim();
+    if (!q) return;
+    setSuggestOpen(false);
+    router.push(`/search?query=${encodeURIComponent(q)}`);
+  };
+
+  const toggleTheme = () => {
+    const next: Theme = theme === 'dark' ? 'light' : 'dark';
+    if (typeof window === 'undefined') {
+      applyTheme(next);
+      return;
+    }
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      applyTheme(next);
+      return;
+    }
+
+    const apply = () => {
+      flushSync(() => {
+        applyTheme(next);
+      });
+    };
+
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (typeof doc.startViewTransition === 'function') {
+      doc.startViewTransition(apply);
+    } else {
+      document.documentElement.classList.add('theme-transitioning');
+      apply();
+      window.setTimeout(() => {
+        document.documentElement.classList.remove('theme-transitioning');
+      }, 380);
+    }
+  };
+
+  const user = me?.authenticated ? me.user : undefined;
+  const displayName = user
+    ? formatUserDisplayName(user.firstName, user.lastName) || user.email
+    : me === null
+      ? '…'
+      : 'Account';
+  const displayEmail = user?.email ?? (me === null ? '…' : '');
+  const avatarText = user ? initialsForUser(user) : me === null ? '…' : '?';
+
+  return (
+    <header className="topbar">
+      <div className="topbar-left">
+        {showSidebarToggle ? (
+          <button
+            type="button"
+            className="topbar-sidebar-toggle"
+            aria-label="Open navigation menu"
+            onClick={onToggleSidebar}
+          >
+            <PanelLeft size={19} />
+          </button>
+        ) : null}
+        <h1 className="topbar-title">{title}</h1>
+      </div>
+
+      <div className="topbar-center">
+        <div className="search-wrap" ref={searchWrapRef}>
+        <div className="search-bar">
+          <Search size={16} className="search-icon" aria-hidden />
+          <input
+            ref={searchRef}
+            type="search"
+            placeholder='Search anything... e.g. "payment due", "paid", "today", "2026-04-04"'
+            className="search-input"
+            aria-label="Search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={() => setSuggestOpen(suggestions.length > 0)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                submitSearch();
+              }
+              if (e.key === 'Escape') {
+                setSuggestOpen(false);
+              }
+            }}
+          />
+          <kbd className="search-kbd" title={`Focus search (${kbdHint})`}>
+            {kbdHint}
+          </kbd>
+        </div>
+        {suggestOpen && (
+          <div className="search-suggest">
+            {searchLoading ? (
+              <div className="search-suggest__state">Searching...</div>
+            ) : suggestions.length === 0 ? (
+              <div className="search-suggest__state">No matches yet.</div>
+            ) : (
+              <>
+                {suggestions.map((s) => (
+                  <button
+                    type="button"
+                    key={s.id}
+                    className="search-suggest__item"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setSuggestOpen(false);
+                      setSearchTerm(s.label);
+                      router.push(s.href);
+                    }}
+                  >
+                    <span className="search-suggest__inv">{s.label}</span>
+                    <span className="search-suggest__client">{s.subLabel ?? ''}</span>
+                    <span className="search-suggest__amt">{s.badge ?? ''}</span>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="search-suggest__all"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={submitSearch}
+                >
+                  View all results for "{searchTerm.trim()}"
+                </button>
+              </>
+            )}
+          </div>
+        )}
+        </div>
+      </div>
+
+      <div className="topbar-right">
+        <button type="button" className="action-btn notifications-btn" aria-label="Notifications">
+          <span className="notification-badge" aria-hidden />
+          <Bell size={20} />
+        </button>
+
+        <button type="button" className="action-btn" aria-label="Messages">
+          <MessageCircle size={20} />
+        </button>
+
+        <button type="button" className="theme-toggle-btn" onClick={toggleTheme} aria-label="Toggle theme">
+          {theme === 'dark' ? <SunMedium size={18} /> : <MoonStar size={18} />}
+        </button>
+
+        <div className="user-profile-menu" role="button" tabIndex={0} aria-label="Account menu">
+          <div className="avatar-small" aria-hidden>
+            {avatarText}
+          </div>
+          <div className="user-info-small">
+            <span className="user-name-small">{displayName}</span>
+            {displayEmail ? (
+              <span className="user-email-small">{displayEmail}</span>
+            ) : null}
+          </div>
+          <ChevronDown size={14} className="dropdown-icon" aria-hidden />
+        </div>
+      </div>
+    </header>
+  );
+}

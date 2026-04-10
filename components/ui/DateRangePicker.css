@@ -1,0 +1,211 @@
+/* Wraps two DatePicker inputs; tokens match globals + DatePicker.css */
+
+.date-range-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.date-range-picker__sep {
+  color: var(--text-muted, var(--text-secondary));
+  font-size: 0.875rem;
+  font-weight: 600;
+  user-select: none;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.date-range-picker__input {
+  min-width: 0;
+  flex: 1 1 7.5rem;
+}
+
+.date-range-picker .dp-root {
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .date-range-picker:not(.date-range-picker--pill) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+  }
+
+  .date-range-picker:not(.date-range-picker--pill) .date-range-picker__sep {
+    display: none;
+  }
+
+  .date-range-picker:not(.date-range-picker--pill) .date-range-picker__input {
+    flex: 1 1 auto;
+  }
+}
+
+/* Dashboard: single “Due Date” pill → panel with From / To */
+.date-range-picker--pill {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.date-range-picker__pill-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.375rem;
+  padding: 0.35rem 0.72rem 0.35rem 0.78rem;
+  margin: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #1e293b;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+.date-range-picker__pill-trigger:hover {
+  border-color: #94a3b8;
+}
+
+.date-range-picker__pill-trigger--open {
+  border-color: color-mix(in oklch, var(--accent-primary, var(--primary)) 45%, #cbd5e1);
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent-primary, var(--primary)) 22%, transparent);
+}
+
+.date-range-picker__pill-trigger:focus {
+  outline: none;
+}
+
+.date-range-picker__pill-trigger:focus-visible {
+  border-color: var(--accent-primary, var(--primary));
+  box-shadow: 0 0 0 2px color-mix(in oklch, var(--accent-primary, var(--primary)) 28%, transparent);
+}
+
+.date-range-picker__pill-calendar {
+  flex-shrink: 0;
+  color: #64748b;
+}
+
+.date-range-picker__pill-placeholder {
+  color: #475569;
+  white-space: nowrap;
+}
+
+.date-range-picker__pill-value {
+  color: #1e293b;
+  white-space: nowrap;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.date-range-picker__pill-chevron {
+  flex-shrink: 0;
+  color: #94a3b8;
+  transition: transform 0.15s ease;
+}
+
+.date-range-picker__pill-chevron--open {
+  transform: rotate(180deg);
+}
+
+.date-range-picker__panel {
+  box-sizing: border-box;
+  min-width: min(20rem, calc(100vw - 2rem));
+  /* Balanced inset — reference: equal breathing room on all sides */
+  padding: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow:
+    0 10px 38px rgb(15 23 42 / 0.09),
+    0 3px 12px rgb(15 23 42 / 0.05);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Pill variant: panel is portaled to body; position set inline (fixed) */
+.date-range-picker__panel--portal {
+  max-width: calc(100vw - 16px);
+  background-color: #ffffff;
+  isolation: isolate;
+}
+
+.date-range-picker__panel-hint {
+  margin: 0 0 0.65rem 0;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #64748b;
+  line-height: 1.35;
+}
+
+.dark .date-range-picker__panel-hint {
+  color: var(--text-secondary, #94a3b8);
+}
+
+.date-range-picker__clear {
+  display: block;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem 0 0;
+  border: none;
+  border-top: 1px solid #e8ecf0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #64748b;
+  cursor: pointer;
+  text-align: right;
+  transition: color 0.15s ease;
+}
+
+.date-range-picker__clear:hover {
+  color: #334155;
+  text-decoration: none;
+}
+
+.dark .date-range-picker__pill-trigger {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-color, #334155);
+  color: var(--text-primary, #f8fafc);
+}
+
+.dark .date-range-picker__pill-placeholder {
+  color: var(--text-secondary, #94a3b8);
+}
+
+.dark .date-range-picker__pill-value {
+  color: var(--text-primary, #f8fafc);
+}
+
+.dark .date-range-picker__pill-calendar,
+.dark .date-range-picker__pill-chevron {
+  color: var(--text-secondary, #94a3b8);
+}
+
+.dark .date-range-picker__panel {
+  background: var(--bg-secondary, #1e293b);
+  border-color: var(--border-color, #334155);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.35);
+}
+
+.dark .date-range-picker__clear {
+  border-top-color: var(--border-color, #334155);
+  color: var(--text-secondary, #94a3b8);
+}
+
+.dark .date-range-picker__clear:hover {
+  color: var(--text-primary, #e2e8f0);
+}

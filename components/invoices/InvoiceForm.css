@@ -1,0 +1,284 @@
+/* Invoice Builder Layout Styles */
+.invoice-builder-layout {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 0 1.5rem 0;
+}
+
+/* Left Controls Area */
+.invoice-builder-controls {
+  flex: 0 0 360px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* Custom Scrollbar for controls */
+.invoice-builder-controls::-webkit-scrollbar { width: 6px; }
+.invoice-builder-controls::-webkit-scrollbar-track { background: transparent; }
+.invoice-builder-controls::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+
+/* Tabs */
+.type-tabs {
+  display: flex;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 0.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.type-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-tab.active {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Accordions */
+.builder-form-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.accordion-section {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  cursor: pointer;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.accordion-content {
+  padding-bottom: 1rem;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Modern Inputs with Icons */
+.form-group-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.modern-input-group label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.input-icon {
+  position: absolute;
+  left: 0.875rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.modern-input {
+  width: 100%;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  height: 42px;
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+.modern-input:read-only {
+  background-color: var(--bg-primary);
+  color: var(--text-secondary);
+}
+
+/* Items */
+.item-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background-color: var(--bg-secondary);
+}
+
+.icon-btn-danger {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.2s;
+}
+
+.icon-btn-danger:hover {
+  color: var(--danger);
+}
+
+.btn-add-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-item:hover {
+  background-color: var(--bg-primary);
+  border-color: var(--text-secondary);
+}
+
+/* Checkbox */
+.checkbox-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+
+/* Right Preview Area */
+.invoice-builder-preview {
+  flex: 1;
+  background-color: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.preview-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.action-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-tag:hover { color: var(--text-primary); }
+
+.preview-document-wrapper {
+  background-color: #f1f5f9; /* Outer wrapper to mimic paper on desk */
+  flex: 1;
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  overflow-y: auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Override the entire document view for precise styling */
+.preview-document {
+  background-color: #ffffff;
+  color: #0f172a;
+  width: 100%;
+  max-width: 700px;
+  padding: 1.85rem;
+  border-radius: 4px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  font-family: inherit;
+  align-self: flex-start;
+}
+
+@media (min-width: 1440px) {
+  .invoice-builder-layout {
+    transform: scale(0.95);
+    transform-origin: top center;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+    background-color: transparent !important;
+  }
+
+  .preview-document,
+  .preview-document * {
+    visibility: visible;
+  }
+
+  .preview-document {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    padding: 1.5rem;
+    box-shadow: none !important;
+    border-radius: 0;
+  }
+}

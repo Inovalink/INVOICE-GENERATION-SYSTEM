@@ -1,0 +1,145 @@
+/* Receipts list — aligned with invoices/clients table pages + theme tokens */
+
+.page-container:has(.receipts-page) {
+  padding-top: 2.5rem;
+  padding-bottom: 2.5rem;
+  padding-left: clamp(1rem, 2.8vw, 2rem);
+  padding-right: clamp(1rem, 2.8vw, 2rem);
+}
+
+.receipts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  max-width: 1200px;
+}
+
+.receipts-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+
+.receipts-title-block h1 {
+  margin: 0 0 0.2rem 0;
+  font-size: 1.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.receipts-subtitle {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.receipts-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.receipts-card .table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.receipts-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.receipts-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--bg-secondary);
+  box-shadow: 0 1px 0 var(--border-color);
+}
+
+.receipts-table th,
+.receipts-table td {
+  padding: 0.75rem 0.85rem;
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.receipts-table th {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.receipts-table td {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  font-weight: 400;
+}
+
+.receipts-table tbody tr {
+  transition: background-color 0.12s ease;
+}
+
+.receipts-table tbody tr:hover {
+  background: color-mix(in srgb, var(--accent-primary) 6%, transparent);
+}
+
+.receipts-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.receipt-number-cell {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.receipt-invoice-link {
+  color: var(--accent-primary);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.receipt-invoice-link:hover {
+  color: var(--text-primary);
+  border-bottom-color: var(--text-primary);
+}
+
+.receipt-amount-cell {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.receipts-table .receipt-pill-link--compact {
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .receipts-table th:nth-child(3),
+  .receipts-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .receipts-title-block h1 {
+    font-size: 1.5rem;
+  }
+
+  .receipts-table th,
+  .receipts-table td {
+    padding: 0.6rem 0.55rem;
+    font-size: 0.76rem;
+  }
+}

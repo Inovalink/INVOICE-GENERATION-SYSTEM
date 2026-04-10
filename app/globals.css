@@ -1,0 +1,768 @@
+@font-face {
+  font-family: 'Mona Sans';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 900;
+  src: url('https://cdn.jsdelivr.net/fontsource/fonts/mona-sans:vf@latest/latin-wght-normal.woff2')
+    format('woff2-variations');
+}
+
+:root {
+  --font-sans: 'Mona Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+
+  /* shadcn / Tailwind v4 theme (oklch) — emerald primary + chart scale */
+  --radius: 0.65rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.141 0.005 285.823);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.141 0.005 285.823);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.141 0.005 285.823);
+  /* Bright brand green (aligned with --chart-2 hue ~150°) — dashboard + CTAs */
+  --primary: oklch(0.67 0.19 150.2);
+  --primary-foreground: oklch(0.99 0.01 150);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.967 0.001 286.375);
+  --muted-foreground: oklch(0.552 0.016 285.938);
+  --accent: oklch(0.967 0.001 286.375);
+  --accent-foreground: oklch(0.21 0.006 285.885);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 286.32);
+  --input: oklch(0.92 0.004 286.32);
+  --ring: oklch(0.78 0.17 150);
+  --chart-1: oklch(0.93 0.06 150);
+  --chart-2: oklch(0.723 0.219 149.579);
+  --chart-3: oklch(0.7 0.195 149.8);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.48 0.12 150);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.141 0.005 285.823);
+  --sidebar-primary: oklch(0.67 0.19 150.2);
+  --sidebar-primary-foreground: oklch(0.99 0.01 150);
+  --sidebar-accent: oklch(0.967 0.001 286.375);
+  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
+  --sidebar-border: oklch(0.92 0.004 286.32);
+  --sidebar-ring: oklch(0.78 0.17 150);
+
+  /* Light Mode Colors - Modern Crisp */
+  --bg-primary: #f8fafc; /* Very light gray for background */
+  --bg-secondary: #ffffff; /* Pure white for cards */
+  --bg-tertiary: #f1f5f9; /* Table headers, inset rows */
+  --text-primary: #09090b; /* Near Black */
+  --text-secondary: #303136; /* Updated subtle text color */
+  --border-color: #e2e8f0; /* Soft gray border */
+
+  /* Brand green — shadcn primary scale (overrides shadcn neutral --accent name below) */
+  --accent-primary: var(--primary);
+  --accent-hover: color-mix(in oklch, var(--primary) 82%, black);
+  --accent-light: color-mix(in oklch, var(--primary) 13%, white);
+  --accent-light-border: color-mix(in oklch, var(--primary) 24%, white);
+  --accent: var(--accent-primary);
+
+  /* Sidebar active row + upgrade card — same pair as reference mint / emerald */
+  --success: var(--primary);
+  --success-light: color-mix(in oklch, var(--primary) 14%, white);
+  --warning: #f59e0b;
+  --warning-light: rgba(254, 243, 199, 1); /* custom light tailored to screenshot */
+  --danger: #ef4444;
+  --danger-light: rgba(254, 226, 226, 1);
+
+  /* Charts — bright greens; strong stroke uses chart-3 (lighter than old chart-4) */
+  --chart-revenue: var(--chart-2);
+  --chart-revenue-strong: var(--chart-3);
+  --chart-revenue-glow: color-mix(in oklch, var(--chart-2) 58%, transparent);
+
+  /* Invoice status tags — shared (tables, modals, dashboard) */
+  --status-proforma-bg: #e0f2fe;
+  --status-proforma-text: #0369a1;
+  --status-proforma-border: #bae6fd;
+
+  --status-pending-bg: #fef3c7;
+  --status-pending-text: #92400e;
+  --status-pending-border: #fde68a;
+
+  --status-paid-bg: color-mix(in oklch, var(--primary) 14%, white);
+  --status-paid-text: color-mix(in oklch, var(--primary) 88%, black);
+  --status-paid-border: color-mix(in oklch, var(--primary) 26%, white);
+
+  --status-partial-bg: #ffedd5;
+  --status-partial-text: #c2410c;
+  --status-partial-border: #fdba74;
+
+  --status-overdue-bg: #fee2e2;
+  --status-overdue-text: #b91c1c;
+  --status-overdue-border: #fecaca;
+
+  --status-cancelled-bg: #f3f4f6;
+  --status-cancelled-text: #4b5563;
+  --status-cancelled-border: #e5e7eb;
+  
+  /* Layout & Spacing */
+  --sidebar-width: 260px;
+  --header-height: 70px;
+  
+  /* Soft, modern radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 30px;
+  
+  /* Modern soft shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+/* Full-page invoice header badge (same palette as tables/modals) */
+.invoice-status-badge {
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+  border: none;
+  text-transform: capitalize;
+}
+
+.invoice-status-badge.invoice-status-proforma {
+  background-color: var(--status-proforma-bg);
+  color: var(--status-proforma-text);
+}
+
+.invoice-status-badge.invoice-status-pending {
+  background-color: var(--status-pending-bg);
+  color: var(--status-pending-text);
+}
+
+.invoice-status-badge.invoice-status-paid {
+  background-color: var(--status-paid-bg);
+  color: var(--status-paid-text);
+}
+
+.invoice-status-badge.invoice-status-partial {
+  background-color: var(--status-partial-bg);
+  color: var(--status-partial-text);
+}
+
+.invoice-status-badge.invoice-status-overdue {
+  background-color: var(--status-overdue-bg);
+  color: var(--status-overdue-text);
+}
+
+.invoice-status-badge.invoice-status-cancelled {
+  background-color: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
+}
+
+/* Receipt — ghost pill (outline, minimal fill; light UI) */
+.receipt-pill-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: auto;
+  min-width: 0;
+  padding: 0.5rem 1.05rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  white-space: nowrap;
+  color: #0f172a;
+  background: transparent;
+  border: 1px solid #d1d5db;
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.18s ease;
+}
+
+.receipt-pill-link:hover {
+  color: #020617;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: #9ca3af;
+  transform: translateY(-0.5px);
+}
+
+.receipt-pill-link:active {
+  transform: translateY(0);
+  background: #f3f4f6;
+}
+
+.receipt-pill-link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent-primary) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.receipt-pill-link svg {
+  flex-shrink: 0;
+  color: currentColor;
+  stroke-width: 2;
+  opacity: 0.92;
+  transition: opacity 0.2s ease;
+}
+
+.receipt-pill-link:hover svg {
+  opacity: 1;
+}
+
+/* Tighter for dense tables */
+.receipt-pill-link--compact {
+  padding: 0.4rem 0.72rem;
+  font-size: 0.72rem;
+  gap: 0.38rem;
+  letter-spacing: 0.03em;
+}
+
+button.receipt-pill-link,
+button.receipt-pill-link--compact {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* Dark mode — shadcn-style zinc dashboard (neutral chroma, layered surfaces) */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.72 0.18 150.2);
+  --primary-foreground: oklch(0.99 0.01 150);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.7 0.16 150);
+  --chart-1: oklch(0.93 0.06 150);
+  --chart-2: oklch(0.723 0.219 149.579);
+  --chart-3: oklch(0.7 0.195 149.8);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.48 0.12 150);
+  --sidebar: oklch(0.145 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.76 0.19 150);
+  --sidebar-primary-foreground: oklch(0.99 0.01 150);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.7 0.16 150);
+
+  --bg-primary: var(--background);
+  --bg-secondary: var(--card);
+  /* Table headers / inset rows — between page and card */
+  --bg-tertiary: oklch(0.22 0 0);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--muted-foreground);
+  --border-color: oklch(1 0 0 / 11%);
+
+  --accent-primary: var(--primary);
+  --accent-hover: color-mix(in oklch, var(--primary) 82%, white);
+  --accent-light: color-mix(in oklch, var(--primary) 18%, transparent);
+  --accent-light-border: color-mix(in oklch, var(--primary) 36%, transparent);
+  --accent: var(--accent-primary);
+
+  --success: var(--primary);
+  --success-light: color-mix(in oklch, var(--primary) 18%, transparent);
+  --warning-light: rgba(245, 158, 11, 0.12);
+  --danger-light: rgba(239, 68, 68, 0.12);
+
+  --status-proforma-bg: rgba(14, 165, 233, 0.15);
+  --status-proforma-text: #7dd3fc;
+  --status-proforma-border: rgba(14, 165, 233, 0.35);
+
+  --status-pending-bg: rgba(245, 158, 11, 0.12);
+  --status-pending-text: #fcd34d;
+  --status-pending-border: rgba(245, 158, 11, 0.35);
+
+  --status-paid-bg: color-mix(in oklch, var(--primary) 16%, transparent);
+  --status-paid-text: color-mix(in oklch, var(--primary) 78%, white);
+  --status-paid-border: color-mix(in oklch, var(--primary) 34%, transparent);
+
+  --status-partial-bg: rgba(249, 115, 22, 0.12);
+  --status-partial-text: #fdba74;
+  --status-partial-border: rgba(249, 115, 22, 0.35);
+
+  --status-overdue-bg: rgba(239, 68, 68, 0.12);
+  --status-overdue-text: #fca5a5;
+  --status-overdue-border: rgba(239, 68, 68, 0.35);
+
+  --status-cancelled-bg: rgba(148, 163, 184, 0.12);
+  --status-cancelled-text: #cbd5e1;
+  --status-cancelled-border: rgba(148, 163, 184, 0.28);
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.45);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.42);
+  --shadow-lg: 0 12px 40px -10px rgb(0 0 0 / 0.5);
+}
+
+.dark .ui-date-trigger {
+  border-color: var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.dark .ui-date-popover {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-lg);
+}
+
+.dark .ui-date-popover .rdp-caption_label,
+.dark .ui-date-popover .rdp-weekday,
+.dark .ui-date-popover .rdp-day_button {
+  color: var(--text-primary);
+}
+
+.dark .receipt-pill-link {
+  color: #f8fafc;
+  border-color: rgba(255, 255, 255, 0.38);
+  background: transparent;
+}
+
+.dark .receipt-pill-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.58);
+}
+
+.dark .receipt-pill-link:active {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  font-family: inherit;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+/* Modern date picker (react-day-picker) */
+.ui-date-field {
+  position: relative;
+  width: 100%;
+}
+
+.ui-date-label {
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.4rem;
+}
+
+.ui-date-trigger {
+  width: 100%;
+  min-height: 2.35rem;
+  border-radius: 999px;
+  border: 1px solid #d8dee8;
+  background: var(--bg-secondary);
+  padding: 0.35rem 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.1s ease;
+  color: var(--text-primary);
+}
+
+.ui-date-trigger:hover {
+  border-color: rgba(100, 116, 139, 0.55);
+}
+
+.ui-date-trigger.is-open {
+  border-color: color-mix(in srgb, var(--accent-primary) 55%, var(--border-color));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+}
+
+.ui-date-icon {
+  color: var(--text-secondary);
+}
+
+.ui-date-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.ui-date-text.is-placeholder {
+  color: rgba(100, 116, 139, 0.9);
+}
+
+.ui-date-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 60;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1);
+  padding: 0.55rem 0.65rem 0.6rem;
+  width: 290px;
+  max-width: min(290px, calc(100vw - 24px));
+}
+
+.ui-date-popover .rdp {
+  --rdp-cell-size: 33px;
+  --rdp-accent-color: var(--accent-primary);
+  --rdp-background-color: var(--accent-light);
+  --rdp-outline: 2px solid var(--accent-light-border);
+  --rdp-outline-selected: 2px solid var(--accent-light-border);
+  margin: 0;
+}
+
+.ui-date-popover .rdp-months,
+.ui-date-popover .rdp-month {
+  width: 100%;
+}
+
+.ui-date-popover .rdp-caption {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 0.2rem;
+}
+
+.ui-date-popover .rdp-caption_label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ui-date-popover .rdp-weekday {
+  font-size: 0.62rem;
+  color: #111827;
+  font-weight: 600;
+  text-transform: none;
+  opacity: 0.85;
+}
+
+.ui-date-popover .rdp-head_row,
+.ui-date-popover .rdp-week {
+  height: 34px;
+}
+
+.ui-date-popover .rdp-day {
+  padding: 0;
+}
+
+.ui-date-popover .rdp-day_button {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #111827;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.12s ease;
+}
+
+.ui-date-popover .rdp-day_button:hover {
+  background-color: var(--accent-light);
+  color: var(--accent-hover);
+}
+
+.ui-date-popover .rdp-nav_button {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: var(--accent-primary);
+  background: transparent;
+  transition: background-color 0.18s ease;
+}
+
+.ui-date-popover .rdp-nav_button:hover {
+  background-color: var(--accent-light);
+}
+
+.ui-date-popover .rdp-nav_button_previous {
+  position: absolute;
+  left: 2px;
+}
+
+.ui-date-popover .rdp-nav_button_next {
+  position: absolute;
+  right: 2px;
+}
+
+.ui-date-popover .rdp-day_selected .rdp-day_button {
+  background-color: var(--accent-primary);
+  color: #ffffff;
+}
+
+.ui-date-popover .rdp-day_today:not(.rdp-day_selected) .rdp-day_button {
+  background-color: color-mix(in srgb, var(--accent-primary) 16%, var(--bg-secondary));
+  color: var(--accent-primary);
+}
+
+.ui-date-popover .rdp-day_outside {
+  visibility: hidden;
+}
+
+.ui-date-popover .rdp-day_outside .rdp-day_button {
+  pointer-events: none;
+}
+
+.ui-date-popover .rdp-day_disabled .rdp-day_button {
+  background-color: #e5e7eb;
+  color: #9ca3af;
+}
+
+@media (max-width: 640px) {
+  .ui-date-popover {
+    width: min(290px, calc(100vw - 24px));
+  }
+}
+
+/* Typography */
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.45rem; letter-spacing: -0.02em; }
+h2 { font-size: 1.35rem; font-weight: 600; margin-bottom: 0.45rem; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; font-weight: 600; margin-bottom: 0.2rem; }
+p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.9rem; }
+
+/* Layout Classes */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: var(--sidebar-width);
+  transition: margin 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-container {
+  padding: 2.5rem 6.5rem;
+  max-width: 1500px;
+  margin: 0 auto;
+  width: 100%;
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Reclaims horizontal padding so create-invoice columns can use more width */
+.invoice-create-page-wrap {
+  width: 100%;
+  max-width: none;
+  margin-left: -4.75rem;
+  margin-right: -4.75rem;
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1100px) {
+  .invoice-create-page-wrap {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  letter-spacing: 0.01em;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: white;
+  box-shadow: 0 4px 6px -1px color-mix(in srgb, var(--accent-primary) 35%, transparent),
+    0 2px 4px -2px color-mix(in srgb, var(--accent-primary) 28%, transparent);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 8px -1px color-mix(in srgb, var(--accent-primary) 42%, transparent),
+    0 4px 6px -2px color-mix(in srgb, var(--accent-primary) 32%, transparent);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+}
+
+.btn-outline:hover {
+  background-color: var(--bg-primary);
+  border-color: var(--text-secondary);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  background-color: var(--bg-secondary);
+  box-shadow: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Cards */
+.card {
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: none; /* Removing shadow to match flat design */
+  padding: 1.75rem;
+  transition: transform 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  border-color: #e2e8f0;
+}
+
+/* Tables */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 1.25rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background-color: var(--bg-primary);
+}
+
+tr {
+  transition: background-color 0.2s ease;
+}
+
+tr:hover td {
+  background-color: var(--bg-primary);
+  opacity: 0.95;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+/* Utilities */
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-end { justify-content: flex-end; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+.mt-4 { margin-top: 1rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-8 { margin-bottom: 2rem; }
+.text-right { text-align: right; }
+
+/* Receipt modal open: when printing, hide the app shell so only the receipt is printed */
+@media print {
+  body.receipt-print-active .app-layout {
+    display: none !important;
+  }
+
+  body.receipt-print-active {
+    background: #fff !important;
+  }
+}

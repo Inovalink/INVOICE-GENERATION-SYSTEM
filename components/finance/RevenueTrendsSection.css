@@ -1,0 +1,91 @@
+.revenue-trends-section {
+  margin-bottom: 0;
+}
+
+.revenue-trends-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.revenue-trends-header h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0 0 0.2rem 0;
+  color: var(--text-primary);
+}
+
+.revenue-trends-sub {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.revenue-trends-segment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  background: var(--bg-primary);
+  padding: 0.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--border-color);
+}
+
+.revenue-trends-segment-btn {
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.revenue-trends-segment-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.revenue-trends-segment-btn.active {
+  background: color-mix(in srgb, var(--chart-revenue) 12%, transparent);
+  color: var(--chart-revenue-strong);
+  border: 1px solid color-mix(in srgb, var(--chart-revenue) 28%, transparent);
+}
+
+.revenue-trends-chart-wrap {
+  min-height: 280px;
+}
+
+.revenue-trends-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.revenue-trends-state--error {
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .revenue-trends-header {
+    flex-direction: column;
+  }
+
+  .revenue-trends-segment {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .revenue-trends-segment-btn {
+    flex: 1;
+    text-align: center;
+  }
+}

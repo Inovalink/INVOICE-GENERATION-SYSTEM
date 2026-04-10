@@ -1,0 +1,1045 @@
+ .dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.dashboard-header h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.2rem;
+}
+
+.dashboard-header p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.dashboard-hero-card {
+  background-color: var(--bg-secondary);
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  padding: 1.15rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-hero-card h2 {
+  font-size: 1rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.dashboard-hero-card p {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.hero-cta-btn {
+  border-radius: 999px;
+  padding: 0.55rem 1.3rem;
+  border: none;
+  background-color: var(--accent-primary);
+  color: #ffffff;
+  font-size: 0.8rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.hero-cta-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.hero-cta-btn:active {
+  transform: scale(0.98);
+}
+
+/* Sales-style metric cards (left accent bar + icon + trend) */
+.dashboard-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.metric-summary-card {
+  position: relative;
+  background-color: var(--bg-secondary);
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  min-height: 132px;
+}
+
+.metric-summary-card__accent {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 68%;
+  border-radius: 0 999px 999px 0;
+}
+
+.metric-summary-card--primary .metric-summary-card__accent {
+  background: linear-gradient(180deg, var(--chart-2) 0%, var(--primary) 100%);
+}
+
+.metric-summary-card--trend .metric-summary-card__accent {
+  background: linear-gradient(180deg, #7c3aed 0%, #6d28d9 100%);
+}
+
+.metric-summary-card--pending .metric-summary-card__accent {
+  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%);
+}
+
+.metric-summary-card--overdue .metric-summary-card__accent {
+  background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.metric-summary-card--profit .metric-summary-card__accent {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+}
+
+.metric-summary-card__inner {
+  padding: 1rem 1rem 0.85rem 1.25rem;
+}
+
+.metric-summary-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.metric-summary-card__label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+.metric-summary-card__icon-box {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.metric-summary-card--primary .metric-summary-card__icon-box {
+  background-color: var(--accent-light);
+  color: var(--accent-primary);
+}
+
+.metric-summary-card--trend .metric-summary-card__icon-box {
+  background-color: #f3e8ff;
+  color: #7c3aed;
+}
+
+.metric-summary-card--pending .metric-summary-card__icon-box {
+  background-color: #ffedd5;
+  color: #ea580c;
+}
+
+.metric-summary-card--overdue .metric-summary-card__icon-box {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.metric-summary-card--profit .metric-summary-card__icon-box {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+@keyframes metric-icon-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-6deg);
+  }
+  75% {
+    transform: rotate(6deg);
+  }
+}
+
+.metric-summary-card__icon-box--wiggle svg {
+  animation: metric-icon-wiggle 1.2s ease-in-out infinite;
+}
+
+.metric-summary-card__value {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+
+.metric-summary-card__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  font-size: 0.72rem;
+  font-weight: 500;
+}
+
+.metric-summary-card__trend-info {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.metric-summary-card__trend-arrow {
+  flex-shrink: 0;
+}
+
+.metric-summary-card__trend-text {
+  line-height: 1.35;
+}
+
+.metric-summary-card__trend--positive {
+  color: var(--primary);
+}
+
+.metric-summary-card__trend--positive .metric-summary-card__trend-info,
+.metric-summary-card__trend--positive .metric-summary-card__trend-arrow {
+  color: var(--primary);
+}
+
+.metric-summary-card__trend--negative {
+  color: #b91c1c;
+}
+
+.metric-summary-card__trend--negative .metric-summary-card__trend-info,
+.metric-summary-card__trend--negative .metric-summary-card__trend-arrow {
+  color: #b91c1c;
+}
+
+.metric-summary-card__trend--neutral {
+  color: #64748b;
+}
+
+.metric-summary-card__trend--neutral .metric-summary-card__trend-info {
+  color: #64748b;
+}
+
+@media (max-width: 1200px) {
+  .dashboard-metrics-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-metrics-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-alerts-and-created {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.75fr);
+  gap: 1.1rem;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-alerts-and-created {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.1rem;
+}
+
+.dashboard-stats-row--created-only {
+  grid-template-columns: 1fr;
+}
+
+.dashboard-stat-card {
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--border-color);
+}
+
+.stat-label {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-bottom: 0.45rem;
+}
+
+.stat-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.stat-number {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-caption {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.4rem 0;
+}
+
+.stat-progress-bar {
+  display: grid;
+  grid-template-columns: repeat(40, 1fr);
+  gap: 2px;
+}
+
+.stat-progress-segment {
+  height: 8px;
+  border-radius: 999px;
+  background-color: #e2e8f0;
+}
+
+.stat-progress-segment.filled {
+  background-color: var(--accent-primary);
+}
+
+.created-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+}
+
+.created-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-bottom: 0;
+}
+
+.created-edit-btn {
+  width: 22px;
+  height: 22px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.created-progress-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.65rem;
+  margin-bottom: 0.45rem;
+}
+
+.created-progress-main {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28rem;
+  flex-wrap: wrap;
+}
+
+.created-progress-percent {
+  font-size: 1.65rem;
+  line-height: 1;
+  font-weight: 700;
+  color: var(--success);
+}
+
+.created-progress-delta {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--success);
+}
+
+.created-progress-context {
+  font-size: 0.75rem;
+  color: #303136;
+  opacity: 0.85;
+}
+
+.created-progress-target {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #303136;
+  font-weight: 500;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.created-target-pill {
+  padding: 0.22rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #f3f4f6;
+  font-weight: 600;
+  color: #303136;
+}
+
+.created-progress-bar {
+  margin-bottom: 0.45rem;
+}
+
+.created-progress-bar .stat-progress-segment {
+  height: 18px;
+  border-radius: 3px;
+}
+
+.created-progress-bar .stat-progress-segment.filled {
+  background-color: var(--success);
+}
+
+.created-caption {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+.dashboard-overdue {
+  background-color: var(--bg-secondary);
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  padding: 1.25rem 1.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.overdue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.overdue-header h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.overdue-header p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.overdue-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  background-color: #fef9c3;
+  color: #854d0e;
+  font-size: 0.75rem;
+}
+
+.overdue-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.overdue-card {
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-secondary);
+  padding: 0.85rem 0.95rem;
+}
+
+.overdue-top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.overdue-invoice-id {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.risk-badge {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.risk-high {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.risk-low {
+  background-color: #dcfce7;
+  color: var(--primary);
+}
+
+.risk-medium {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.overdue-amount {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.15rem;
+}
+
+.overdue-meta {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.25rem 0;
+}
+
+.overdue-client {
+  font-size: 0.8rem;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.overdue-empty {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.dashboard-table-card {
+  background-color: var(--bg-secondary);
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  padding: 1.3rem 1.4rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.table-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  gap: 1rem;
+}
+
+.table-header-row h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.2rem;
+}
+
+.table-header-row p {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chip-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  color: var(--text-primary);
+}
+
+.primary-pill-btn {
+  border-radius: 999px;
+  background-color: var(--accent-primary);
+  color: #ffffff;
+  padding: 0.5rem 1.2rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-table-wrapper {
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+.dashboard-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dashboard-table-wrapper th {
+  background-color: #f8fafc;
+  text-align: left;
+  padding: 0.7rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #303136;
+}
+
+.dashboard-table-wrapper td {
+  padding: 0.75rem 0.9rem;
+  font-size: 0.8rem;
+  border-top: 1px solid #e5e7eb;
+  color: #303136;
+}
+
+.dashboard-table-wrapper tbody tr:hover td {
+  background-color: var(--bg-primary);
+}
+
+.empty-row {
+  text-align: center;
+  padding: 1.25rem 0;
+  color: var(--text-secondary);
+}
+
+.status-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  letter-spacing: 0.01em;
+}
+
+.status-pill-paid {
+  background-color: var(--status-paid-bg);
+  color: var(--status-paid-text);
+}
+
+.status-pill-pending {
+  background-color: var(--status-pending-bg);
+  color: var(--status-pending-text);
+}
+
+.status-pill-partial {
+  background-color: var(--status-partial-bg);
+  color: var(--status-partial-text);
+}
+
+.status-pill-draft {
+  background-color: var(--status-proforma-bg);
+  color: var(--status-proforma-text);
+}
+
+.status-pill-overdue {
+  background-color: var(--status-overdue-bg);
+  color: var(--status-overdue-text);
+}
+
+.dashboard-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.9rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.pagination-left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.page-size-chip {
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary);
+  padding: 0.25rem 0.6rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.pagination-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pagination-nav {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.pagination-pages {
+  font-weight: 500;
+}
+
+/* Payment speed trend (line chart) */
+.payment-speed-trend {
+  margin: 0;
+}
+
+.payment-speed-trend__card {
+  background-color: var(--bg-secondary);
+  border-radius: 18px;
+  border: 1px solid var(--border-color);
+  padding: 1.25rem 1.35rem 1.1rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.payment-speed-trend__card--loading {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.payment-speed-trend__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.payment-speed-trend__title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 0.3rem 0;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.payment-speed-trend__subtitle {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 42rem;
+}
+
+.payment-speed-trend__toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-primary);
+  padding: 3px;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.payment-speed-trend__toggle button {
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.4rem 0.95rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.payment-speed-trend__toggle button:hover {
+  color: var(--text-primary);
+}
+
+.payment-speed-trend__toggle button.active {
+  background: var(--text-primary);
+  color: #ffffff;
+}
+
+.payment-speed-trend__hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  margin: 0 0 0.75rem 0;
+  max-width: 40rem;
+  line-height: 1.45;
+}
+
+.payment-speed-trend__hint svg {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+  color: var(--chart-revenue, #0d9488);
+}
+
+.payment-speed-trend__hint strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.payment-speed-trend__empty {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 1rem 0 0.25rem;
+  line-height: 1.5;
+}
+
+.payment-speed-trend__chart {
+  width: 100%;
+  min-height: 320px;
+}
+
+@media (min-width: 1440px) {
+  .dashboard-page {
+    transform: scale(0.96);
+    transform-origin: top center;
+  }
+}
+
+/* Screenshot-matched dashboard shell */
+.dashboard-shell-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-shell-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+}
+
+.dashboard-shell-title span {
+  color: #0f172a;
+}
+
+.dashboard-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.dashboard-date-pill__circle {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 1px solid #cdebd9;
+  background: #eafbf1;
+  color: #22a15b;
+  font-size: 1.35rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-date-pill__meta {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.dashboard-date-pill__btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-metrics-row {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(300px, 0.75fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.dashboard-lower-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.dashboard-lower-grid__card > .sale-analytics-card,
+.dashboard-lower-grid__card > .invoice-status-radial {
+  height: 100%;
+}
+
+@media (max-width: 1280px) {
+  .dashboard-metrics-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .dashboard-main-grid,
+  .dashboard-lower-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark mode — dashboard hardcoded lights → zinc / token surfaces (shadcn-style) */
+.dark .metric-summary-card--trend .metric-summary-card__icon-box {
+  background-color: color-mix(in oklch, #a78bfa 18%, transparent);
+  color: #c4b5fd;
+}
+
+.dark .metric-summary-card--pending .metric-summary-card__icon-box {
+  background-color: color-mix(in oklch, #fb923c 16%, transparent);
+  color: #fdba74;
+}
+
+.dark .metric-summary-card--overdue .metric-summary-card__icon-box {
+  background-color: color-mix(in oklch, #f87171 14%, transparent);
+  color: #fca5a5;
+}
+
+.dark .metric-summary-card--profit .metric-summary-card__icon-box {
+  background-color: color-mix(in oklch, var(--primary) 18%, transparent);
+  color: color-mix(in oklch, var(--primary) 78%, white);
+}
+
+.dark .metric-summary-card__trend--negative,
+.dark .metric-summary-card__trend--negative .metric-summary-card__trend-info,
+.dark .metric-summary-card__trend--negative .metric-summary-card__trend-arrow {
+  color: oklch(0.72 0.2 22);
+}
+
+.dark .metric-summary-card__trend--neutral,
+.dark .metric-summary-card__trend--neutral .metric-summary-card__trend-info {
+  color: var(--text-secondary);
+}
+
+.dark .stat-progress-segment:not(.filled) {
+  background-color: oklch(1 0 0 / 8%);
+}
+
+.dark .created-edit-btn {
+  border-color: var(--border-color);
+  background-color: oklch(1 0 0 / 6%);
+  color: var(--text-secondary);
+}
+
+.dark .created-progress-context,
+.dark .created-progress-target {
+  color: var(--text-secondary);
+  opacity: 1;
+}
+
+.dark .created-target-pill {
+  border-color: var(--border-color);
+  background: oklch(1 0 0 / 6%);
+  color: var(--text-secondary);
+}
+
+.dark .created-caption {
+  color: var(--text-secondary);
+}
+
+.dark .overdue-pill {
+  background-color: color-mix(in oklch, #eab308 14%, transparent);
+  color: #fde047;
+}
+
+.dark .risk-high {
+  background-color: color-mix(in oklch, #f87171 14%, transparent);
+  color: #fecaca;
+}
+
+.dark .risk-low {
+  background-color: color-mix(in oklch, var(--primary) 16%, transparent);
+  color: color-mix(in oklch, var(--primary) 82%, white);
+}
+
+.dark .risk-medium {
+  background-color: color-mix(in oklch, #fbbf24 14%, transparent);
+  color: #fcd34d;
+}
+
+.dark .dashboard-table-wrapper {
+  border-color: var(--border-color);
+}
+
+.dark .dashboard-table-wrapper th {
+  background-color: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.dark .dashboard-table-wrapper td {
+  border-top-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.dark .payment-speed-trend__toggle button.active {
+  background: oklch(1 0 0 / 12%);
+  color: var(--foreground);
+}
+
+.dark .dashboard-shell-title,
+.dark .dashboard-shell-title span {
+  color: var(--text-primary);
+}
+
+.dark .dashboard-date-pill__circle {
+  border-color: color-mix(in oklch, var(--primary) 38%, transparent);
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+
+.dark .dashboard-date-pill__meta {
+  color: var(--text-secondary);
+}
+
+.dark .dashboard-date-pill__btn {
+  border-color: var(--border-color);
+  background: oklch(1 0 0 / 6%);
+  color: var(--text-secondary);
+}
+
+.dark .dashboard-hero-card,
+.dark .metric-summary-card,
+.dark .dashboard-stat-card,
+.dark .dashboard-overdue,
+.dark .dashboard-table-card,
+.dark .payment-speed-trend__card,
+.dark .overdue-card {
+  box-shadow: none;
+  border-color: var(--border-color);
+}
+

@@ -1,0 +1,192 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum AccountType {
+  SOLO
+  TEAM
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+model User {
+  id          String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  firstName   String @default("")
+  lastName    String @default("")
+  phone       String?
+  /// Display name (kept for receipts / legacy: "First Last")
+  name        String
+  accountType AccountType @default(SOLO)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships WorkspaceMember[]
+  invoices    Invoice[]
+  receipts    Receipt[]
+  tasks       Task[]
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  location  String?
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  WorkspaceMember[]
+  invoices Invoice[]
+}
+
+model WorkspaceMember {
+  id          String   @id @default(uuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        MembershipRole @default(STAFF)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, workspaceId])
+  @@index([workspaceId])
+  @@index([userId])
+}
+
+model Client {
+  id        String    @id @default(uuid())
+  name      String
+  company   String?
+  phone     String?
+  email     String?   @unique
+  address   String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  invoices  Invoice[]
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  name        String
+  category    String
+  description String?
+  price       Float
+  isHourly    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  items       InvoiceItem[]
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  invoiceNumber  String        @unique
+  clientId       String
+  client         Client        @relation(fields: [clientId], references: [id])
+  userId         String
+  user           User          @relation(fields: [userId], references: [id])
+  workspaceId    String?
+  workspace      Workspace?    @relation(fields: [workspaceId], references: [id])
+  status         InvoiceStatus @default(PROFORMA)
+  issueDate            DateTime      @default(now())
+  dueDate              DateTime?
+  expectedDeliveryDate DateTime?
+  subtotal       Float
+  tax            Float         @default(0)
+  discount       Float         @default(0)
+  totalAmount    Float         @default(0)
+  depositAmount  Float         @default(0)
+  amountDue      Float         @default(0)
+  paymentStatus  String        @default("pending")
+  total          Float
+  notes          String?
+  paymentTerms   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  items          InvoiceItem[]
+  payments       Payment[]
+  receipt        Receipt?
+}
+
+enum InvoiceStatus {
+  PROFORMA
+  FINAL
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id])
+  description String
+  quantity    Float
+  unitPrice   Float
+  subtotal    Float
+}
+
+model Payment {
+  id              String        @id @default(uuid())
+  invoiceId       String
+  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
+  amount          Float
+  paymentDate     DateTime      @default(now())
+  paymentMethod   PaymentMethod
+  transactionRef  String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+}
+
+enum PaymentMethod {
+  CASH
+  BANK_TRANSFER
+  MOBILE_MONEY
+  CREDIT_CARD
+  OTHER
+}
+
+model Receipt {
+  id            String   @id @default(uuid())
+  receiptNumber String   @unique
+  invoiceId     String   @unique
+  invoice       Invoice  @relation(fields: [invoiceId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  issueDate     DateTime @default(now())
+  totalAmount   Float
+  notes         String?
+  createdAt     DateTime @default(now())
+}
+
+model Task {
+  id        String       @id @default(uuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  notes     String?
+  dueDate   DateTime
+  priority  TaskPriority @default(NORMAL)
+  completed Boolean    @default(false)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@index([userId, dueDate])
+}
+
+enum TaskPriority {
+  NORMAL
+  HIGH
+  URGENT
+}

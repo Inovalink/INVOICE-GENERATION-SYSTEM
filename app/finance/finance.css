@@ -1,0 +1,1612 @@
+/* Finance page layout */
+.finance-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.finance-page__header h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 0.35rem 0;
+}
+
+.finance-page__header p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 42rem;
+  line-height: 1.5;
+}
+
+/* Top products (left) + total invoices (right), equal width and matched height */
+.finance-analytics-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: stretch;
+  width: 100%;
+}
+
+.finance-analytics-row > .sale-analytics-card,
+.finance-analytics-row > .invoice-total-card {
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* One bordered card per column */
+.finance-analytics-row > .sale-analytics-card {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.finance-analytics-row .invoice-total-card--split {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.finance-analytics-row .sale-analytics-card__chart-wrap {
+  flex: 1;
+  min-height: 0;
+  align-items: stretch;
+  justify-content: center;
+  width: 100%;
+}
+
+.finance-analytics-row .invoice-total-card--split .invoice-total-card__shell--split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 1024px) {
+  .finance-analytics-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Sale Analytics – Top Selling Products (aligned with Total Invoices shell) */
+.sale-analytics-card {
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid #e8ecf1;
+  box-shadow:
+    0 1px 3px rgb(15 23 42 / 0.05),
+    0 14px 44px rgb(15 23 42 / 0.07);
+  padding: 1.35rem 1.4rem 1.5rem;
+  position: relative;
+  overflow: visible;
+  transition:
+    box-shadow 0.26s ease,
+    border-color 0.26s ease;
+}
+
+.sale-analytics-card:focus,
+.sale-analytics-card:focus-visible {
+  outline: none;
+}
+
+.dark .sale-analytics-card {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sale-analytics-card:hover {
+    border-color: color-mix(in srgb, var(--accent-primary) 22%, #e8ecf1);
+    box-shadow:
+      0 2px 8px rgb(15 23 42 / 0.06),
+      0 18px 48px rgb(15 23 42 / 0.09);
+  }
+
+  .dark .sale-analytics-card:hover {
+    border-color: oklch(1 0 0 / 18%);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.sale-analytics-card--loading {
+  opacity: 0.72;
+  pointer-events: none;
+}
+
+.sale-analytics-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.sale-analytics-card__title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.dark .sale-analytics-card__title {
+  color: var(--text-secondary);
+}
+
+.sale-analytics-card__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
+}
+
+.sale-analytics-card__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* Mint pill dropdowns — reuse `invoice-total-dd*` (Total Invoices reference) */
+.sale-analytics-card__pill-dds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.sale-analytics-card__pill-dds .invoice-total-dd__trigger {
+  min-width: 4.6rem;
+  max-width: 8rem;
+}
+
+.sale-analytics-card__empty {
+  margin: 2rem 0 1rem;
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.dark .sale-analytics-card__empty {
+  color: var(--text-secondary);
+}
+
+.sale-analytics-card__chart-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  overflow-x: visible;
+  padding: 0.5rem 0 0.25rem;
+}
+
+.sale-analytics-card__pie-shell {
+  position: relative;
+  width: 720px;
+  max-width: 100%;
+  min-height: 440px;
+}
+
+/* Slightly tighter side padding so a larger pie fits without horizontal scroll */
+.finance-analytics-row .sale-analytics-card--split {
+  padding-left: 0.9rem;
+  padding-right: 0.9rem;
+}
+
+.finance-analytics-row .sale-analytics-card--split .sale-analytics-card__pie-shell {
+  width: 100%;
+  max-width: 700px;
+  margin-inline: auto;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.sale-analytics-card__pie-svg {
+  display: block;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.sale-analytics-card__pie-svg .recharts-surface {
+  overflow: visible;
+}
+
+.finance-analytics-row .sale-analytics-card--split .sale-analytics-card__pie-shell .recharts-wrapper {
+  overflow: visible !important;
+}
+
+/* Recharts: surface, wrapper, and Pie root layer can receive focus and show a default outline on click */
+.sale-analytics-card .recharts-wrapper:focus,
+.sale-analytics-card .recharts-wrapper:focus-visible,
+.sale-analytics-card__pie-shell .recharts-surface:focus,
+.sale-analytics-card__pie-shell .recharts-surface:focus-visible,
+.sale-analytics-card .recharts-layer:focus,
+.sale-analytics-card .recharts-layer:focus-visible {
+  outline: none;
+}
+
+.sale-analytics-card__center-slot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.sale-analytics-card__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.28rem;
+  max-width: min(12.5rem, 48%);
+}
+
+.sale-analytics-card__center-curr {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.dark .sale-analytics-card__center-curr {
+  color: var(--text-secondary);
+}
+
+.sale-analytics-card__center-amount {
+  font-size: clamp(1.2rem, 2.6vw, 1.75rem);
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+}
+
+.dark .sale-analytics-card__center-amount {
+  color: var(--text-primary);
+}
+
+.sale-analytics-card__center-main {
+  display: block;
+  font-size: clamp(1.15rem, 2.5vw, 1.65rem);
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+}
+
+.dark .sale-analytics-card__center-main {
+  color: var(--text-primary);
+}
+
+.sale-analytics-card__center-sub {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+  line-height: 1.25;
+}
+
+.dark .sale-analytics-card__center-sub {
+  color: var(--text-secondary);
+}
+
+.finance-analytics-row .sale-analytics-card--split .sale-analytics-card__center {
+  max-width: min(9.5rem, 44%);
+  gap: 0.22rem;
+}
+
+.finance-analytics-row .sale-analytics-card--split .sale-analytics-card__center-curr {
+  font-size: 0.62rem;
+}
+
+.finance-analytics-row .sale-analytics-card--split .sale-analytics-card__center-amount {
+  font-size: clamp(1rem, 2.2vw, 1.35rem);
+}
+
+.finance-analytics-row .sale-analytics-card--split .sale-analytics-card__center-sub {
+  font-size: 0.72rem;
+}
+
+@media (max-width: 780px) {
+  .sale-analytics-card__pie-shell {
+    transform: scale(0.92);
+    transform-origin: top center;
+  }
+
+  .finance-analytics-row .sale-analytics-card--split .sale-analytics-card__pie-shell {
+    transform: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .sale-analytics-card__pie-shell {
+    transform: scale(0.82);
+  }
+
+  .finance-analytics-row .sale-analytics-card--split .sale-analytics-card__pie-shell {
+    transform: none;
+  }
+}
+
+/* Total Invoices — metric + weekly capsule bars (reference UI) */
+.invoice-total-card {
+  margin: 0;
+}
+
+.invoice-total-card__shell {
+  background: #ffffff;
+  border-radius: 22px;
+  border: 1px solid #e8ecf1;
+  box-shadow:
+    0 1px 3px rgb(15 23 42 / 0.05),
+    0 14px 44px rgb(15 23 42 / 0.07);
+  padding: 1.35rem 1.4rem 1.25rem;
+  max-width: 420px;
+}
+
+.dark .invoice-total-card__shell {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.finance-analytics-row .invoice-total-card--split .invoice-total-card__shell--split {
+  max-width: none;
+  width: 100%;
+  padding: 1.25rem 1.15rem 1.15rem;
+}
+
+.invoice-total-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.invoice-total-card__selects {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+}
+
+/* Custom dropdowns (period + status) — replaces native <select> for styled panel */
+.invoice-total-dd {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Mint pill palette: green-50 bg, green-200 border, green-700 text (reference chip) */
+.invoice-total-dd__trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+  min-width: 4.25rem;
+  max-width: 7.25rem;
+  width: 100%;
+  height: 2.15rem;
+  padding: 0 0.42rem 0 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--primary);
+  border-radius: 999px;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  box-shadow: 0 1px 2px rgb(21 128 61 / 0.06);
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.12s ease;
+}
+
+.invoice-total-dd__trigger:hover {
+  border-color: #86efac;
+  background: #dcfce7;
+  box-shadow: 0 2px 8px rgb(34 197 94 / 0.12);
+}
+
+.invoice-total-dd__trigger:focus-visible {
+  outline: none;
+  border-color: var(--chart-2);
+  box-shadow:
+    0 0 0 2px rgb(34 197 94 / 0.28),
+    0 2px 10px rgb(34 197 94 / 0.12);
+}
+
+.invoice-total-dd__trigger.is-open {
+  border-color: var(--chart-1);
+  background: #f0fdf4;
+  box-shadow:
+    0 0 0 2px rgb(74 222 128 / 0.35),
+    0 3px 12px rgb(34 197 94 / 0.14),
+    0 2px 6px rgb(21 128 61 / 0.08);
+}
+
+.invoice-total-dd__trigger:active {
+  transform: scale(0.97);
+}
+
+.invoice-total-dd__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.invoice-total-dd__chevron {
+  flex-shrink: 0;
+  color: var(--chart-3);
+  transition: transform 0.22s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.invoice-total-dd__trigger.is-open .invoice-total-dd__chevron {
+  transform: rotate(180deg);
+  color: var(--accent-hover);
+}
+
+@keyframes invoice-total-dd-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.invoice-total-dd__list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  margin: 0;
+  padding: 0.4rem;
+  list-style: none;
+  min-width: max(100%, 7.75rem);
+  border-radius: 12px;
+  border: 1px solid #bbf7d0;
+  background: #fff;
+  box-shadow:
+    0 4px 6px rgb(21 128 61 / 0.06),
+    0 18px 40px rgb(21 128 61 / 0.1);
+  animation: invoice-total-dd-open 0.2s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+.invoice-total-dd__item {
+  margin: 0;
+  padding: 0;
+}
+
+.invoice-total-dd__option {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 0.76rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease,
+    transform 0.1s ease;
+}
+
+.invoice-total-dd__option:hover {
+  background: #f0fdf4;
+  color: var(--accent-hover);
+}
+
+.invoice-total-dd__option:focus-visible {
+  outline: none;
+  background: #dcfce7;
+  color: var(--accent-hover);
+}
+
+.invoice-total-dd__option.is-selected {
+  background: #f0fdf4;
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px #bbf7d0;
+}
+
+.invoice-total-dd__option:active {
+  transform: scale(0.98);
+}
+
+.dark .invoice-total-dd__trigger {
+  color: #86efac;
+  border-color: var(--accent-hover);
+  background: color-mix(in srgb, #14532d 55%, var(--bg-secondary));
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+}
+
+.dark .invoice-total-dd__trigger:hover {
+  border-color: var(--chart-2);
+  background: color-mix(in srgb, var(--accent-hover) 45%, var(--bg-secondary));
+}
+
+.dark .invoice-total-dd__trigger:focus-visible {
+  border-color: var(--chart-1);
+  box-shadow: 0 0 0 2px rgb(74 222 128 / 0.35);
+}
+
+.dark .invoice-total-dd__trigger.is-open {
+  border-color: var(--chart-1);
+  box-shadow:
+    0 0 0 2px rgb(74 222 128 / 0.3),
+    0 4px 18px rgb(34 197 94 / 0.15),
+    0 4px 16px rgb(0 0 0 / 0.35);
+}
+
+.dark .invoice-total-dd__chevron {
+  color: var(--chart-1);
+}
+
+.dark .invoice-total-dd__trigger.is-open .invoice-total-dd__chevron {
+  color: #bbf7d0;
+}
+
+.dark .invoice-total-dd__list {
+  border-color: var(--accent-hover);
+  background: var(--bg-secondary);
+  box-shadow:
+    0 4px 12px rgb(0 0 0 / 0.25),
+    0 20px 48px rgb(0 0 0 / 0.35);
+}
+
+.dark .invoice-total-dd__option {
+  color: var(--text-secondary);
+}
+
+.dark .invoice-total-dd__option:hover {
+  background: color-mix(in srgb, #14532d 55%, var(--bg-tertiary));
+  color: #bbf7d0;
+}
+
+.dark .invoice-total-dd__option:focus-visible {
+  background: color-mix(in srgb, var(--accent-hover) 40%, var(--bg-tertiary));
+  color: #d9f99d;
+}
+
+.dark .invoice-total-dd__option.is-selected {
+  background: color-mix(in srgb, #14532d 65%, var(--bg-tertiary));
+  color: #bbf7d0;
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px var(--accent-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .invoice-total-dd__list {
+    animation: none;
+  }
+
+  .invoice-total-dd__trigger,
+  .invoice-total-dd__chevron,
+  .invoice-total-dd__option {
+    transition: none;
+  }
+
+  .invoice-total-dd__trigger:active,
+  .invoice-total-dd__option:active {
+    transform: none;
+  }
+}
+
+.invoice-total-card__title {
+  font-size: 0.98rem;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.dark .invoice-total-card__title {
+  color: var(--text-secondary);
+}
+
+.invoice-total-card__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex: 1;
+  min-width: 0;
+}
+
+.invoice-total-card__loading,
+.invoice-total-card__error {
+  margin: 0.65rem 0 0.85rem;
+  font-size: 0.84rem;
+}
+
+.invoice-total-card__loading {
+  color: #94a3b8;
+}
+
+.invoice-total-card__error {
+  color: var(--danger);
+}
+
+.invoice-total-card__menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.invoice-total-card__menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: none;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.invoice-total-card__menu-btn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.dark .invoice-total-card__menu-btn {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.invoice-total-card__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 200px;
+  padding: 0.65rem 0;
+  border-radius: 14px;
+  border: 1px solid #e8ecf1;
+  background: #ffffff;
+  box-shadow:
+    0 4px 6px rgb(15 23 42 / 0.05),
+    0 18px 40px rgb(15 23 42 / 0.12);
+  z-index: 40;
+}
+
+.dark .invoice-total-card__menu {
+  border-color: var(--border-color);
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-lg);
+}
+
+.invoice-total-card__menu--solo-link {
+  min-width: 0;
+  padding: 0.5rem;
+}
+
+.invoice-total-card__menu-link {
+  display: block;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--primary);
+  text-decoration: none;
+  text-align: center;
+  background: #f8fafc;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.1s ease;
+}
+
+.invoice-total-card__menu-link:hover {
+  background: #f0fdf4;
+  color: var(--accent-hover);
+}
+
+.invoice-total-card__menu-link:active {
+  transform: scale(0.98);
+}
+
+.dark .invoice-total-card__menu-link {
+  background: var(--bg-tertiary);
+  color: #86efac;
+}
+
+.dark .invoice-total-card__menu-link:hover {
+  background: color-mix(in srgb, #14532d 40%, var(--bg-tertiary));
+  color: #bbf7d0;
+}
+
+.invoice-total-card__metric {
+  margin: 0.15rem 0 0.15rem;
+  font-size: clamp(2.1rem, 4vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  color: #0f172a;
+}
+
+.dark .invoice-total-card__metric {
+  color: var(--text-primary);
+}
+
+.invoice-total-card__sub {
+  margin: 0 0 1.1rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.dark .invoice-total-card__sub {
+  color: var(--text-secondary);
+}
+
+.invoice-total-card__chart {
+  margin-top: auto;
+}
+
+.invoice-total-card__bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.32rem;
+  min-height: 218px;
+}
+
+.invoice-total-card__bar-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.invoice-total-card__tip-spacer,
+.invoice-total-card__tip {
+  min-height: 1.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.invoice-total-card__tip {
+  padding: 0.2rem 0.45rem;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  line-height: 1;
+}
+
+.dark .invoice-total-card__tip {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.invoice-total-card__bar-track {
+  container-type: inline-size;
+  container-name: invoice-bar-track;
+  width: 100%;
+  max-width: 30px;
+  margin-inline: auto;
+  height: 168px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f1f5f9 0%, #e8edf3 100%);
+  overflow: hidden;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.dark .invoice-total-card__bar-track {
+  background: color-mix(in srgb, var(--border-color) 55%, var(--bg-tertiary));
+}
+
+.invoice-total-card__bar-fill {
+  width: 100%;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #cbd5e1;
+  /* When height < width, pill radius draws a horizontal “stadium”; keep at least as
+     tall as the track is wide so small values stay a vertical capsule with round ends. */
+  min-height: 100cqi;
+  box-sizing: border-box;
+  transition:
+    height 0.45s ease,
+    min-height 0.45s ease,
+    background 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.invoice-total-card__bar-fill--empty {
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0;
+  margin: 0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* Default accent (fallback if status class missing) */
+.invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #2dd4bf 0%, #14b8a6 100%);
+  box-shadow: 0 2px 10px rgb(20 184 166 / 0.35);
+}
+
+/* Bar colors — deeper saturation (non-accent vs accent) */
+.invoice-total-card__chart--status-paid .invoice-total-card__bar-fill {
+  background: linear-gradient(180deg, var(--chart-1) 0%, var(--chart-2) 100%);
+}
+
+.invoice-total-card__chart--status-paid .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, var(--chart-3) 0%, var(--primary) 100%);
+  box-shadow: 0 2px 12px rgb(22 101 52 / 0.45);
+}
+
+.invoice-total-card__chart--status-pending .invoice-total-card__bar-fill {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+}
+
+.invoice-total-card__chart--status-pending .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #ea580c 0%, #c2410c 100%);
+  box-shadow: 0 2px 12px rgb(194 65 12 / 0.42);
+}
+
+.invoice-total-card__chart--status-overdue .invoice-total-card__bar-fill {
+  background: linear-gradient(180deg, #f87171 0%, #ef4444 100%);
+}
+
+.invoice-total-card__chart--status-overdue .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #dc2626 0%, #991b1b 100%);
+  box-shadow: 0 2px 12px rgb(185 28 28 / 0.45);
+}
+
+.invoice-total-card__chart--status-proforma .invoice-total-card__bar-fill {
+  background: linear-gradient(180deg, #7dd3fc 0%, #0ea5e9 100%);
+}
+
+.invoice-total-card__chart--status-proforma .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+  box-shadow: 0 2px 12px rgb(3 105 161 / 0.38);
+}
+
+.dark .invoice-total-card__chart--status-paid .invoice-total-card__bar-fill {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--chart-2) 58%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, var(--primary) 52%, var(--bg-tertiary)) 100%
+  );
+}
+
+.dark .invoice-total-card__chart--status-paid .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, var(--chart-2) 0%, var(--accent-hover) 100%);
+  box-shadow: 0 2px 14px rgb(34 197 94 / 0.35);
+}
+
+.dark .invoice-total-card__chart--status-pending .invoice-total-card__bar-fill {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #f59e0b 55%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, #d97706 50%, var(--bg-tertiary)) 100%
+  );
+}
+
+.dark .invoice-total-card__chart--status-pending .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #f97316 0%, #c2410c 100%);
+  box-shadow: 0 2px 14px rgb(249 115 22 / 0.35);
+}
+
+.dark .invoice-total-card__chart--status-overdue .invoice-total-card__bar-fill {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #ef4444 52%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, #b91c1c 48%, var(--bg-tertiary)) 100%
+  );
+}
+
+.dark .invoice-total-card__chart--status-overdue .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #ef4444 0%, #991b1b 100%);
+  box-shadow: 0 2px 14px rgb(239 68 68 / 0.35);
+}
+
+.dark .invoice-total-card__chart--status-proforma .invoice-total-card__bar-fill {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, #38bdf8 52%, var(--bg-tertiary)) 0%,
+    color-mix(in srgb, #0284c7 46%, var(--bg-tertiary)) 100%
+  );
+}
+
+.dark .invoice-total-card__chart--status-proforma .invoice-total-card__bar-fill--accent {
+  background: linear-gradient(180deg, #0ea5e9 0%, #075985 100%);
+  box-shadow: 0 2px 14px rgb(14 165 233 / 0.35);
+}
+
+.invoice-total-card__bar-label {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.02em;
+}
+
+.dark .invoice-total-card__bar-label {
+  color: var(--text-secondary);
+}
+
+.invoice-total-card__chart-hint {
+  margin: 0.55rem 0 0;
+  font-size: 0.62rem;
+  font-weight: 500;
+  color: #cbd5e1;
+  text-align: center;
+}
+
+.dark .invoice-total-card__chart-hint {
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+@media (max-width: 560px) {
+  .invoice-total-card__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .invoice-total-card__head-actions {
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+
+  .invoice-total-card__selects {
+    flex: 0 1 auto;
+    min-width: 0;
+    justify-content: flex-end;
+  }
+
+  .invoice-total-dd__trigger {
+    max-width: 7rem;
+    min-width: 4rem;
+    font-size: 0.68rem;
+    padding-left: 0.45rem;
+    padding-right: 0.38rem;
+  }
+
+  .invoice-total-dd__option {
+    font-size: 0.72rem;
+    padding: 0.45rem 0.5rem;
+  }
+}
+
+/* Invoice list inside charts grid (column 1) — row gap from parent grid */
+.finance-invoice-list-card {
+  margin-top: 0;
+  overflow: visible;
+}
+
+.finance-invoice-list-card__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1rem 1.25rem;
+  margin-bottom: 1.1rem;
+}
+
+/* Title + filter row in one flex block (see InvoicesTable dashboardTitle) */
+.finance-invoice-list-card__header--integrated {
+  margin-bottom: 1.1rem;
+}
+
+.finance-invoice-list-card__header--integrated .dashboard-invoice-filters.finance-invoice-list-card__toolbar-row {
+  flex: 1 1 17rem;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.finance-invoice-list-card__titles {
+  flex: 0 1 auto;
+  min-width: min(100%, 11rem);
+}
+
+.finance-invoice-list-card__title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.finance-invoice-list-card__titles:has(.finance-invoice-list-card__subtitle) .finance-invoice-list-card__title {
+  margin-bottom: 0.25rem;
+}
+
+.finance-invoice-list-card__subtitle {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin: 0;
+  max-width: 36rem;
+  line-height: 1.45;
+}
+
+.finance-invoice-list-card__toolbar-row {
+  flex: 1 1 17rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+  min-width: 0;
+}
+
+.finance-invoice-list-card__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.finance-invoice-list-card__toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-inline-start: auto;
+}
+
+/* Reference: muted pill “Filter By” */
+.finance-invoice-list-card__filter-by {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  height: 2.35rem;
+  padding: 0 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #475569;
+  background: #e8edf3;
+  border: none;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  cursor: not-allowed;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.dark .finance-invoice-list-card__filter-by {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--border-color) 55%, var(--bg-tertiary));
+  box-shadow: none;
+}
+
+/* White outline pills: Status, Due Date, Export */
+.finance-invoice-list-card__pill-btn,
+.finance-invoice-list-card__export-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.35rem;
+  padding: 0 0.78rem 0 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #1e293b;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+  cursor: not-allowed;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.dark .finance-invoice-list-card__pill-btn,
+.dark .finance-invoice-list-card__export-btn {
+  color: var(--text-primary);
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: none;
+}
+
+.finance-invoice-list-card__pill-chevron {
+  color: #64748b;
+  flex-shrink: 0;
+  margin-inline-start: 0.06rem;
+}
+
+.dark .finance-invoice-list-card__pill-chevron {
+  color: var(--text-secondary);
+}
+
+.finance-invoice-list-card__filter-by:disabled,
+.finance-invoice-list-card__pill-btn:disabled,
+.finance-invoice-list-card__export-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.78;
+}
+
+.finance-invoice-list-card__create {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 2.35rem;
+  padding: 0 1.05rem 0 0.88rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Dashboard variant table (fewer columns) */
+.modern-table--dashboard th {
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+}
+
+/* Finance invoice list — email column (reference: airy, secondary body text) */
+.modern-table--dashboard .modern-table__col-email {
+  min-width: 10rem;
+  max-width: min(20rem, 32vw);
+}
+
+.modern-table--dashboard .modern-table__col-email .modern-table__sort-th {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.modern-table--dashboard td.modern-table__col-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modern-table__cell-muted {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.finance-greeting-fallback {
+  min-height: 5.5rem;
+}
+
+.finance-greeting-section__calendar-popover {
+  /* position/top/left/z-index set inline for overlay */
+  box-sizing: border-box;
+  width: min(400px, calc(100vw - 16px));
+  max-width: calc(100vw - 16px);
+  padding: 0.75rem 0.85rem 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+}
+
+.dark .finance-greeting-section__calendar-popover {
+  box-shadow: 0 16px 48px rgb(0 0 0 / 0.4);
+}
+
+.finance-greeting-section__calendar-popover .rdp-root {
+  --rdp-accent-color: var(--accent-primary);
+  --rdp-accent-background-color: var(--success-light);
+  /* Fit 7 columns inside the panel without horizontal spill */
+  --rdp-day-height: 36px;
+  --rdp-day-width: 36px;
+  --rdp-day_button-height: 34px;
+  --rdp-day_button-width: 34px;
+  --rdp-nav-height: 2.5rem;
+  --rdp-dropdown-gap: 0.35rem;
+
+  width: 100%;
+  margin: 0;
+}
+
+.finance-greeting-section__calendar-popover .rdp-months {
+  width: 100%;
+  max-width: 100%;
+}
+
+.finance-greeting-section__calendar-popover .rdp-month {
+  width: 100%;
+}
+
+.finance-greeting-section__calendar-popover .rdp-month_grid {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.finance-greeting-section__calendar-popover .rdp-weekday {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.finance-greeting-section__calendar-popover .rdp-month_caption {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Label caption + chevron nav (no native <select> — avoids OS dropdown styling) */
+.finance-greeting-section__calendar-popover .rdp-caption_label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.finance-greeting-section__calendar-popover .rdp-button_previous,
+.finance-greeting-section__calendar-popover .rdp-button_next {
+  border-radius: 9px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--accent-primary);
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.finance-greeting-section__calendar-popover .rdp-button_previous:hover:not(:disabled):not([aria-disabled='true']),
+.finance-greeting-section__calendar-popover .rdp-button_next:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--success-light);
+  border-color: var(--accent-primary);
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.06);
+}
+
+.finance-greeting-section__calendar-popover .rdp-button_previous:focus-visible,
+.finance-greeting-section__calendar-popover .rdp-button_next:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.dark .finance-greeting-section__calendar-popover .rdp-button_previous,
+.dark .finance-greeting-section__calendar-popover .rdp-button_next {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.finance-greeting-section__calendar-popover .rdp-nav {
+  height: var(--rdp-nav-height);
+}
+
+.finance-greeting-section__calendar-popover .rdp-selected {
+  font-size: inherit;
+  font-weight: 600;
+}
+
+/* Greeting + date row (below global topbar, finance page) */
+.finance-greeting-section {
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.35rem;
+  padding-bottom: 0.15rem;
+}
+
+.finance-greeting-section__text {
+  min-width: 0;
+}
+
+.finance-greeting-section__title {
+  margin: 0 0 0.35rem 0;
+  font-size: clamp(1.5rem, 2.4vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--text-primary);
+}
+
+.finance-greeting-section__date-block {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.finance-greeting-section__date-visual {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+/* Wrap is the flex item; inner .picker must be centered here — align-self on .picker alone does nothing */
+.finance-greeting-section__picker-wrap {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.finance-greeting-section__date-divider {
+  width: 1px;
+  flex-shrink: 0;
+  align-self: stretch;
+  min-height: 4.75rem;
+  margin: 0;
+  background: var(--border-color);
+  opacity: 0.9;
+}
+
+.finance-greeting-section__date-circle {
+  font-family: var(--font-sans);
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 32%, var(--border-color));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.95rem;
+  font-weight: 600;
+  /* Plain “0” — tabular-nums can swap in slashed-zero glyphs in Mona Sans */
+  font-variant-numeric: normal;
+  letter-spacing: -0.04em;
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, white);
+}
+
+.dark .finance-greeting-section__date-circle {
+  border-color: color-mix(in srgb, var(--accent-primary) 38%, var(--border-color));
+  background: color-mix(in srgb, var(--accent-primary) 12%, var(--bg-secondary));
+}
+
+.finance-greeting-section__date-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  line-height: 1.15;
+}
+
+.finance-greeting-section__weekday {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: capitalize;
+}
+
+.finance-greeting-section__month {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  text-transform: capitalize;
+}
+
+/*
+ * Date filter trigger — white card, gray calendar, primary-green chevron cap (reference UI).
+ */
+.finance-greeting-section__picker {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: min(268px, 100%);
+  max-width: 100%;
+  flex: 0 0 auto;
+  min-height: 3rem;
+  padding: 0.45rem 0.45rem 0.45rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid #e8ecf1;
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.045),
+    0 6px 20px rgb(15 23 42 / 0.07);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.finance-greeting-section__picker--open {
+  border-color: color-mix(in srgb, var(--accent-primary) 28%, #e8ecf1);
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.05),
+    0 8px 24px color-mix(in srgb, var(--accent-primary) 14%, rgb(15 23 42 / 0.08));
+}
+
+.dark .finance-greeting-section__picker {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  box-shadow: var(--shadow-md);
+}
+
+.dark .finance-greeting-section__picker--open {
+  border-color: color-mix(in srgb, var(--accent-primary) 42%, var(--border-color));
+  box-shadow:
+    var(--shadow-md),
+    0 0 0 1px color-mix(in srgb, var(--accent-primary) 22%, transparent);
+}
+
+.dark .finance-greeting-section__picker-input,
+.dark .finance-greeting-section__picker-input::placeholder {
+  color: var(--text-secondary);
+}
+
+.dark .finance-greeting-section__picker-icon {
+  color: #94a3b8;
+}
+
+.finance-greeting-section__picker-icon {
+  flex-shrink: 0;
+  color: #9ca3af;
+}
+
+.finance-greeting-section__picker-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #374151;
+  font-family: inherit;
+  outline: none;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.finance-greeting-section__picker-input::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.finance-greeting-section__picker-input--all {
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.dark .finance-greeting-section__picker-input--all {
+  color: var(--text-secondary);
+}
+
+.dark .finance-greeting-section__picker-input:not(.finance-greeting-section__picker-input--all) {
+  color: var(--text-primary);
+}
+
+.finance-greeting-section__picker-clear {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #9ca3af;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.finance-greeting-section__picker-clear:hover {
+  color: var(--accent-primary);
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+.dark .finance-greeting-section__picker-clear:hover {
+  background: rgb(255 255 255 / 0.06);
+}
+
+.finance-greeting-section__picker-chevron {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent-primary);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--accent-primary) 35%, transparent);
+}
+
+.finance-greeting-section__picker-chevron:hover {
+  background: var(--accent-hover);
+}
+
+.finance-greeting-section__picker-chevron svg {
+  transition: transform 0.22s ease;
+}
+
+.finance-greeting-section__picker-chevron[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.dark .finance-greeting-section__picker-chevron {
+  background: var(--accent-primary);
+  color: #ffffff;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 0.25);
+}
+
+.dark .finance-greeting-section__picker-chevron:hover {
+  background: var(--accent-hover);
+}
+
+.finance-greeting-section__picker-chevron:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg-primary),
+    0 0 0 4px var(--accent-primary);
+}
+
+.dark .finance-greeting-section__picker-chevron:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--bg-secondary),
+    0 0 0 4px var(--accent-hover);
+}
+
+@media (max-width: 640px) {
+  .finance-greeting-section {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .finance-greeting-section__date-block {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
