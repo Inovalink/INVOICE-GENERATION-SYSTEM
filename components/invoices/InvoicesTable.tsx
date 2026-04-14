@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   Banknote,
@@ -374,7 +375,7 @@ export default function InvoicesTable({
     setModalMode('preview');
   };
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setSelected(null);
     setAmount('');
     setPaymentKind('full');
@@ -392,7 +393,21 @@ export default function InvoicesTable({
     setDraftBankName('');
     setDraftAccountNumber('');
     setDraftAccountName('');
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!selected) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [selected, closeModal]);
 
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-US', {
@@ -907,8 +922,18 @@ export default function InvoicesTable({
         />
       )}
 
-      {selected && (
-        <div className="invoice-modal-backdrop" onClick={closeModal}>
+      {selected &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="invoice-modal-backdrop"
+            role="dialog"
+            aria-modal="true"
+            aria-label={modalMode === 'preview' ? 'Invoice preview' : 'Record payment'}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeModal();
+            }}
+          >
           <div
             className={`invoice-modal ${modalMode === 'preview' ? 'invoice-preview-modal' : 'invoice-payment-modal'}`}
             onClick={(e) => {
@@ -1631,8 +1656,9 @@ export default function InvoicesTable({
               </>
             )}
           </div>
-        </div>
-      )}
+        </div>,
+          document.body,
+        )}
 
       <ReceiptModal receiptId={viewReceiptId} onClose={() => setViewReceiptId(null)} />
     </>

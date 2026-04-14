@@ -1035,13 +1035,23 @@
   margin-bottom: 1.1rem;
 }
 
-/* Title + filter row in one flex block (see InvoicesTable dashboardTitle) */
+/* Title on first row, filter + actions row directly beneath (see InvoicesTable dashboardTitle) */
 .finance-invoice-list-card__header--integrated {
   margin-bottom: 1.1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+}
+
+.finance-invoice-list-card__header--integrated .finance-invoice-list-card__titles {
+  flex: none;
+  min-width: 0;
+  width: 100%;
 }
 
 .finance-invoice-list-card__header--integrated .dashboard-invoice-filters.finance-invoice-list-card__toolbar-row {
-  flex: 1 1 17rem;
+  flex: none;
+  width: 100%;
   min-width: 0;
   margin-bottom: 0;
 }

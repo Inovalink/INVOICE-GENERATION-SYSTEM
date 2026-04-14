@@ -1047,12 +1047,23 @@
 .invoice-modal-backdrop {
   position: fixed;
   inset: 0;
+  width: 100%;
+  min-width: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  box-sizing: border-box;
   background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding-inline: clamp(1.4rem, 6vw, 5.5rem);
-  z-index: 220;
+  padding-inline: clamp(1rem, 5vw, 5.5rem);
+  padding-block: clamp(0.75rem, 3vh, 2rem);
+  z-index: 450;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 .invoice-modal {

@@ -88,11 +88,17 @@ export function daysOverdueFromDueDate(dueDate: string | Date): number {
 export type OverdueRiskLevel = 'low' | 'medium' | 'high';
 
 /**
- * Dashboard overdue-card risk: first day past due (1 day) = low; exactly 3 days = medium; all other counts = high.
+ * Risk from calendar days past due (start-of-day): 1 day = low, 2–4 = medium, 5+ = high.
  */
 export function overdueRiskFromDaysOverdue(daysOverdue: number): OverdueRiskLevel {
-  const d = Math.max(0, Math.floor(Number(daysOverdue)));
-  if (d <= 1) return 'low';
-  if (d === 3) return 'medium';
+  const d = Math.max(1, Math.floor(Number(daysOverdue)));
+  if (d === 1) return 'low';
+  if (d <= 4) return 'medium';
   return 'high';
+}
+
+export function overdueRiskDisplayLabel(level: OverdueRiskLevel): string {
+  if (level === 'low') return 'Low risk';
+  if (level === 'medium') return 'Medium risk';
+  return 'High risk';
 }

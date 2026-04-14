@@ -1,5 +1,10 @@
 import type { PrismaClient } from '@prisma/client';
-import { isInvoiceOverdue, isInvoiceOverdueAsOf } from '@/lib/invoiceDue';
+import {
+  isInvoiceOverdue,
+  isInvoiceOverdueAsOf,
+  overdueRiskFromDaysOverdue,
+  type OverdueRiskLevel,
+} from '@/lib/invoiceDue';
 import { formatGhs } from '@/lib/formatGhs';
 
 export type DashboardAlertIconVariant = 'bill' | 'chart' | 'card' | 'coin' | 'flag' | 'shield';
@@ -16,6 +21,8 @@ export type DashboardAlertRow = {
   href?: string | null;
   /** Month-over-month revenue timeline row: accent bar color + motion. */
   revenueTrend?: 'up' | 'down';
+  /** Set for `kind === 'overdue'` from days past due date. */
+  overdueRisk?: OverdueRiskLevel;
 };
 
 function startOfLocalDay(d: Date): Date {
@@ -192,6 +199,7 @@ export async function buildDashboardAlerts(
       unread: true,
       iconVariant: 'coin',
       href: `/invoices/${inv.id}`,
+      overdueRisk: overdueRiskFromDaysOverdue(daysLate),
     });
   }
 

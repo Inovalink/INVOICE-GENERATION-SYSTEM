@@ -99,8 +99,11 @@
   --status-cancelled-text: #4b5563;
   --status-cancelled-border: #e5e7eb;
   
-  /* Layout & Spacing */
-  --sidebar-width: 260px;
+  /* Layout & Spacing — width also drives .sidebar + .main-content (see [data-sidebar-collapsed]) */
+  --sidebar-width: 230px;
+  --sidebar-width-collapsed: 76px;
+  --sidebar-transition-duration: 0.48s;
+  --sidebar-transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --header-height: 70px;
   
   /* Soft, modern radii */
@@ -113,6 +116,12 @@
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+/* Desktop collapsed rail: narrow sidebar + main margin (set from AppShell).
+   Use presence selector — toggleAttribute() adds an empty-valued attribute, not ="true". */
+:root[data-sidebar-collapsed] {
+  --sidebar-width: var(--sidebar-width-collapsed);
 }
 
 /* Full-page invoice header badge (same palette as tables/modals) */
@@ -565,9 +574,23 @@ p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.9rem; }
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
-  transition: margin 0.3s ease;
+  transition:
+    margin-left var(--sidebar-transition-duration) var(--sidebar-transition-ease);
   display: flex;
   flex-direction: column;
+}
+
+@media (max-width: 960px) {
+  .main-content {
+    margin-left: 0;
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .main-content {
+    transition-duration: 0.01ms;
+  }
 }
 
 .page-container {

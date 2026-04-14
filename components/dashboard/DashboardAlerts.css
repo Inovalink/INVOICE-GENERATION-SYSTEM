@@ -326,6 +326,47 @@
   letter-spacing: 0.01em;
 }
 
+.dashboard-alerts__chip--risk {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.dashboard-alerts__chip--risk-low {
+  color: #166534;
+  background: color-mix(in srgb, #22c55e 14%, var(--bg-secondary));
+  border-color: color-mix(in srgb, #22c55e 35%, var(--border-color));
+}
+
+.dashboard-alerts__chip--risk-medium {
+  color: #a16207;
+  background: color-mix(in srgb, #eab308 16%, var(--bg-secondary));
+  border-color: color-mix(in srgb, #eab308 38%, var(--border-color));
+}
+
+.dashboard-alerts__chip--risk-high {
+  color: #b91c1c;
+  background: color-mix(in srgb, #ef4444 12%, var(--bg-secondary));
+  border-color: color-mix(in srgb, #ef4444 28%, var(--border-color));
+}
+
+.dark .dashboard-alerts__chip--risk-low {
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.dark .dashboard-alerts__chip--risk-medium {
+  color: #fde047;
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.35);
+}
+
+.dark .dashboard-alerts__chip--risk-high {
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.14);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
 .dashboard-alerts__actions {
   margin: 0.75rem 0 0 2.65rem;
   display: flex;

@@ -15,8 +15,7 @@ import {
   ClipboardList,
   ListTodo,
   LogIn,
-  PanelLeftClose,
-  PanelLeftOpen,
+  PanelLeft,
 } from 'lucide-react';
 import './Sidebar.css';
 import type { AuthMeClientState } from '@/lib/auth/authMeClient';
@@ -49,6 +48,9 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const railCollapsed = collapsed && !isMobile;
+  /** One size for expanded + collapsing rail so icons don’t jump in scale mid-transition */
+  const navIconSize = 22;
 
   const logout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -59,45 +61,57 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`sidebar ${collapsed ? 'sidebar--collapsed' : ''} ${isMobile ? 'sidebar--mobile' : ''} ${isMobile && mobileOpen ? 'sidebar--mobile-open' : ''}`}
+      className={`sidebar ${railCollapsed ? 'sidebar--collapsed' : ''} ${isMobile ? 'sidebar--mobile' : ''} ${isMobile && mobileOpen ? 'sidebar--mobile-open' : ''}`}
       aria-hidden={isMobile && !mobileOpen}
     >
       <div className="sidebar-header">
-        <div className="brand-logo">
-          <div className="brand-logo__logo-wrap">
-            <div className="logo-icon-brand">
-              <FileText size={20} color="white" strokeWidth={3} />
+        <div className="sidebar-brand">
+          <div
+            className={
+              railCollapsed
+                ? 'sidebar-brand__mark sidebar-brand__mark--rail'
+                : 'sidebar-brand__mark'
+            }
+          >
+            <div className="sidebar-brand__icon" aria-hidden>
+              <FileText size={18} strokeWidth={2.35} className="sidebar-brand__icon-svg" />
             </div>
-            {collapsed && (
+            {railCollapsed && (
               <button
                 type="button"
-                className="sidebar-collapse-btn sidebar-collapse-btn--floating"
+                className="sidebar-brand__rail-toggle"
                 aria-label="Expand sidebar"
                 title="Expand sidebar"
                 onClick={onToggleCollapsed}
               >
-                <PanelLeftOpen size={26} />
+                <PanelLeft size={18} strokeWidth={2} aria-hidden />
               </button>
             )}
           </div>
-          <h2>FinTrack Pro</h2>
+          <div className="sidebar-brand__title" aria-hidden={railCollapsed}>
+            FinTrack Pro
+          </div>
         </div>
-        {!collapsed && (
-          <button
-            type="button"
-            className="sidebar-collapse-btn"
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
-            onClick={onToggleCollapsed}
-          >
-            <PanelLeftClose size={17} />
-          </button>
+        {!railCollapsed && (
+          <div className="sidebar-header__actions">
+            <button
+              type="button"
+              className="sidebar-header__toggle sidebar-header__toggle--collapse"
+              aria-label="Collapse sidebar"
+              title="Collapse sidebar"
+              onClick={onToggleCollapsed}
+            >
+              <PanelLeft size={18} strokeWidth={2} aria-hidden />
+            </button>
+          </div>
         )}
       </div>
 
       <div className="sidebar-scrollable">
         <div className="nav-section">
-          <h3 className="nav-section-title">Menu</h3>
+          <h3 className="nav-section-title" aria-hidden={railCollapsed}>
+            Menu
+          </h3>
           <ul className="sidebar-nav">
             {menuItems.map((item) => {
               const isActive =
@@ -108,13 +122,13 @@ export default function Sidebar({
                   <Link
                     href={item.href}
                     className={`nav-link ${isActive ? 'active' : ''}`}
-                    title={collapsed ? item.label : undefined}
+                    title={railCollapsed ? item.label : undefined}
                     onClick={() => {
                       if (isMobile) onCloseMobile();
                     }}
                   >
-                    <Icon size={18} className="nav-icon" />
-                    <span>{item.label}</span>
+                    <Icon size={navIconSize} className="nav-icon" />
+                    <span className="nav-link__label">{item.label}</span>
                   </Link>
                 </li>
               );
@@ -123,32 +137,34 @@ export default function Sidebar({
         </div>
 
         <div className="nav-section nav-section--general">
-          <h3 className="nav-section-title">General</h3>
+          <h3 className="nav-section-title" aria-hidden={railCollapsed}>
+            General
+          </h3>
           <ul className="sidebar-nav">
             <li>
               <Link
                 href="/settings"
                 className="nav-link"
-                title={collapsed ? 'Settings' : undefined}
+                title={railCollapsed ? 'Settings' : undefined}
                 onClick={() => {
                   if (isMobile) onCloseMobile();
                 }}
               >
-                <Settings size={18} className="nav-icon" />
-                <span>Settings</span>
+                <Settings size={navIconSize} className="nav-icon" />
+                <span className="nav-link__label">Settings</span>
               </Link>
             </li>
             <li>
               <Link
                 href="/help"
                 className="nav-link"
-                title={collapsed ? 'Help' : undefined}
+                title={railCollapsed ? 'Help' : undefined}
                 onClick={() => {
                   if (isMobile) onCloseMobile();
                 }}
               >
-                <HelpCircle size={18} className="nav-icon" />
-                <span>Help</span>
+                <HelpCircle size={navIconSize} className="nav-icon" />
+                <span className="nav-link__label">Help</span>
               </Link>
             </li>
             {authMe?.authenticated ? (
@@ -157,10 +173,10 @@ export default function Sidebar({
                   type="button"
                   className="nav-link nav-link--button"
                   onClick={logout}
-                  title={collapsed ? 'Sign out' : undefined}
+                  title={railCollapsed ? 'Sign out' : undefined}
                 >
-                  <LogOut size={18} className="nav-icon" />
-                  <span>Sign out</span>
+                  <LogOut size={navIconSize} className="nav-icon" />
+                  <span className="nav-link__label">Sign out</span>
                 </button>
               </li>
             ) : (
@@ -169,26 +185,26 @@ export default function Sidebar({
                   <Link
                     href="/login"
                     className="nav-link"
-                    title={collapsed ? 'Sign in' : undefined}
+                    title={railCollapsed ? 'Sign in' : undefined}
                     onClick={() => {
                       if (isMobile) onCloseMobile();
                     }}
                   >
-                    <LogIn size={18} className="nav-icon" />
-                    <span>Sign in</span>
+                    <LogIn size={navIconSize} className="nav-icon" />
+                    <span className="nav-link__label">Sign in</span>
                   </Link>
                 </li>
                 <li>
                   <Link
                     href="/signup"
                     className="nav-link nav-link--accent"
-                    title={collapsed ? 'Sign up' : undefined}
+                    title={railCollapsed ? 'Sign up' : undefined}
                     onClick={() => {
                       if (isMobile) onCloseMobile();
                     }}
                   >
-                    <Users size={18} className="nav-icon" />
-                    <span>Sign up</span>
+                    <Users size={navIconSize} className="nav-icon" />
+                    <span className="nav-link__label">Sign up</span>
                   </Link>
                 </li>
               </>

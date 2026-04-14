@@ -1,58 +1,97 @@
 'use client';
 
 import Link from 'next/link';
-import { AlertTriangle } from 'lucide-react';
+import { useMemo } from 'react';
 import type { OverdueSourceInvoice } from '@/lib/financeSummaryMetrics';
+import {
+  daysOverdueFromDueDate,
+  overdueRiskFromDaysOverdue,
+  type OverdueRiskLevel,
+} from '@/lib/invoiceDue';
 import { formatGhs } from '@/lib/formatGhs';
+import './OverdueInvoicesAlert.css';
 
 type Props = {
   invoices: OverdueSourceInvoice[];
 };
 
+const RISK_BADGE: Record<OverdueRiskLevel, string> = {
+  low: 'Low Risk',
+  medium: 'Medium Risk',
+  high: 'High Risk',
+};
+
+function daysOverdueForRow(inv: OverdueSourceInvoice): number {
+  if (!inv.dueDate) return 1;
+  return daysOverdueFromDueDate(inv.dueDate);
+}
+
+function formatDueLine(due: Date): string {
+  return due.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 export default function OverdueInvoicesAlert({ invoices }: Props) {
+  const sorted = useMemo(() => {
+    const order = { high: 0, medium: 1, low: 2 } as const;
+    return [...invoices].sort((a, b) => {
+      const da = daysOverdueForRow(a);
+      const db = daysOverdueForRow(b);
+      const ra = overdueRiskFromDaysOverdue(da);
+      const rb = overdueRiskFromDaysOverdue(db);
+      const byRisk = order[ra] - order[rb];
+      if (byRisk !== 0) return byRisk;
+      return db - da;
+    });
+  }, [invoices]);
+
   if (invoices.length === 0) return null;
 
-  const totalDue = invoices.reduce((sum, inv) => sum + Math.max(0, inv.amountDue ?? 0), 0);
-
   return (
-    <div
-      className="content-card"
-      style={{
-        marginBottom: '1rem',
-        borderLeft: '4px solid var(--status-overdue-text, #b45309)',
-        display: 'flex',
-        gap: '1rem',
-        alignItems: 'flex-start',
-      }}
-      role="status"
-    >
-      <AlertTriangle
-        size={22}
-        style={{ flexShrink: 0, color: 'var(--status-overdue-text, #b45309)', marginTop: '0.15rem' }}
-        aria-hidden
-      />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <h3 style={{ margin: '0 0 0.35rem', fontSize: '1rem' }}>
-          {invoices.length === 1 ? '1 invoice is overdue' : `${invoices.length} invoices are overdue`}
-        </h3>
-        <p style={{ margin: 0, color: 'var(--text-muted, #64748b)', fontSize: '0.9rem' }}>
-          Total outstanding on overdue invoices: <strong>{formatGhs(totalDue)}</strong>
-        </p>
-        <ul style={{ margin: '0.75rem 0 0', paddingLeft: '1.1rem', fontSize: '0.9rem' }}>
-          {invoices.slice(0, 5).map((inv) => (
-            <li key={inv.id}>
-              <Link href={`/invoices/${inv.id}`}>
-                {inv.invoiceNumber} · {inv.client.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-        {invoices.length > 5 && (
-          <p style={{ margin: '0.5rem 0 0', fontSize: '0.85rem' }}>
-            <Link href="/invoices">View all invoices</Link>
+    <section className="overdue-invoices-alert" aria-labelledby="overdue-invoices-alert-heading">
+      <div className="overdue-invoices-alert__panel">
+        <div className="overdue-invoices-alert__intro">
+          <h2 id="overdue-invoices-alert-heading" className="overdue-invoices-alert__heading">
+            Overdue Invoices Alert
+          </h2>
+          <p className="overdue-invoices-alert__sub">
+            Some clients are falling behind. Review overdue invoices and take action today.
           </p>
-        )}
+        </div>
+
+        <ul className="overdue-invoices-alert__cards">
+          {sorted.map((inv) => {
+            const daysLate = daysOverdueForRow(inv);
+            const risk = overdueRiskFromDaysOverdue(daysLate);
+            const amt = Math.max(0, inv.amountDue ?? 0);
+            const due = inv.dueDate ? new Date(inv.dueDate) : null;
+            const duePhrase = due ? formatDueLine(due) : '—';
+
+            return (
+              <li key={inv.id} className="overdue-invoices-alert__cards-item">
+                <Link
+                  href={`/invoices/${inv.id}`}
+                  className="overdue-invoices-alert__card"
+                  aria-label={`Invoice ${inv.invoiceNumber}, ${inv.client.name}, ${formatGhs(amt)}, ${daysLate} days overdue, ${RISK_BADGE[risk]}`}
+                >
+                <div className="overdue-invoices-alert__card-top">
+                  <span className="overdue-invoices-alert__card-inv">Invoice #{inv.invoiceNumber}</span>
+                  <span
+                    className={`overdue-invoices-alert__card-risk overdue-invoices-alert__card-risk--${risk}`}
+                  >
+                    {RISK_BADGE[risk]}
+                  </span>
+                </div>
+                <p className="overdue-invoices-alert__card-amount">{formatGhs(amt)}</p>
+                <p className="overdue-invoices-alert__card-delay">
+                  {daysLate} day{daysLate === 1 ? '' : 's'} overdue (due {duePhrase})
+                </p>
+                <p className="overdue-invoices-alert__card-client">{inv.client.name}</p>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
       </div>
-    </div>
+    </section>
   );
 }

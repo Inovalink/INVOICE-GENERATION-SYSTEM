@@ -14,6 +14,7 @@ import {
   TriangleAlert,
 } from 'lucide-react';
 import type { DashboardAlertRow } from '@/lib/dashboardAlerts';
+import { overdueRiskDisplayLabel } from '@/lib/invoiceDue';
 import './DashboardAlerts.css';
 
 function formatTime(iso: string): string {
@@ -135,6 +136,13 @@ export default function DashboardAlerts({ alerts }: Props) {
                     </div>
                     <p className="dashboard-alerts__desc">{a.description}</p>
                     <div className="dashboard-alerts__meta-chips">
+                      {a.kind === 'overdue' && a.overdueRisk ? (
+                        <span
+                          className={`dashboard-alerts__chip dashboard-alerts__chip--risk dashboard-alerts__chip--risk-${a.overdueRisk}`}
+                        >
+                          {overdueRiskDisplayLabel(a.overdueRisk)}
+                        </span>
+                      ) : null}
                       {meta.client ? (
                         <span className="dashboard-alerts__chip">Client: {meta.client}</span>
                       ) : null}

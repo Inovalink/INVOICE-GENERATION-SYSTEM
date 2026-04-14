@@ -26,6 +26,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       .catch(() => setAuthMe({ authenticated: false }));
   }, []);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (collapsed && !isMobile) {
+      root.setAttribute('data-sidebar-collapsed', '');
+    } else {
+      root.removeAttribute('data-sidebar-collapsed');
+    }
+    return () => root.removeAttribute('data-sidebar-collapsed');
+  }, [collapsed, isMobile]);
+
   const onToggleCollapsed = useCallback(() => setCollapsed((c) => !c), []);
   const onCloseMobile = useCallback(() => setMobileOpen(false), []);
   const onToggleMobileSidebar = useCallback(() => setMobileOpen((o) => !o), []);
