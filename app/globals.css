@@ -601,6 +601,19 @@ p { font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.9rem; }
   animation: fadeIn 0.4s ease-out;
 }
 
+.main-content--auth {
+  margin-left: 0;
+  min-height: 100vh;
+}
+
+.page-container--auth {
+  padding: 0;
+  max-width: none;
+  margin: 0;
+  min-height: 100vh;
+  animation: none;
+}
+
 /* Reclaims horizontal padding so create-invoice columns can use more width */
 .invoice-create-page-wrap {
   width: 100%;

@@ -12,6 +12,7 @@ import {
   subscribeTheme,
   type Theme,
 } from '@/components/layout/themeStore';
+import { useFinancialAlertNotificationsSafe } from '@/components/notifications/FinancialAlertNotifications';
 import './Topbar.css';
 
 type MeResponse = {
@@ -78,6 +79,9 @@ export default function Topbar({
   const [suggestions, setSuggestions] = useState<GlobalSuggestion[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const financialNotify = useFinancialAlertNotificationsSafe();
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
+  const notificationPanelRef = useRef<HTMLDivElement>(null);
 
   const refreshMe = useCallback(() => {
     fetch('/api/auth/me')
@@ -117,6 +121,12 @@ export default function Topbar({
     const onDocClick = (e: MouseEvent) => {
       if (searchWrapRef.current && !searchWrapRef.current.contains(e.target as Node)) {
         setSuggestOpen(false);
+      }
+      if (
+        notificationPanelRef.current &&
+        !notificationPanelRef.current.contains(e.target as Node)
+      ) {
+        setNotificationPanelOpen(false);
       }
     };
     document.addEventListener('mousedown', onDocClick);
@@ -278,10 +288,88 @@ export default function Topbar({
       </div>
 
       <div className="topbar-right">
-        <button type="button" className="action-btn notifications-btn" aria-label="Notifications">
-          <span className="notification-badge" aria-hidden />
+        <button
+          type="button"
+          className="action-btn notifications-btn"
+          aria-label={
+            typeof Notification !== 'undefined' && Notification.permission === 'default'
+              ? 'Notifications — click to enable desktop alerts'
+              : 'Notifications'
+          }
+          title="Financial alerts show as toasts automatically. Click to allow desktop notifications (when the browser asks)."
+          onClick={async () => {
+            setNotificationPanelOpen((open) => !open);
+            financialNotify?.markAllNotificationsRead();
+            if (
+              !me?.authenticated ||
+              !financialNotify ||
+              typeof Notification === 'undefined' ||
+              Notification.permission !== 'default'
+            ) {
+              return;
+            }
+            await financialNotify.requestDesktopPermission();
+          }}
+        >
+          {Boolean((financialNotify?.unreadNotificationCount ?? 0) > 0) ? (
+            <span className="notification-badge" aria-hidden />
+          ) : null}
           <Bell size={20} />
         </button>
+        {notificationPanelOpen && (
+          <div className="topbar-notifications-panel" ref={notificationPanelRef}>
+            <div className="topbar-notifications-panel__header">
+              <p className="topbar-notifications-panel__title">Notifications</p>
+              <button
+                type="button"
+                className="topbar-notifications-panel__clear"
+                onClick={() => financialNotify?.markAllNotificationsRead()}
+              >
+                Mark all read
+              </button>
+            </div>
+            <div className="topbar-notifications-panel__list" role="list">
+              {(financialNotify?.notificationInbox?.length ?? 0) === 0 ? (
+                <p className="topbar-notifications-panel__empty">No notifications yet.</p>
+              ) : (
+                financialNotify?.notificationInbox.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`topbar-notifications-panel__item ${item.unread ? 'is-unread' : ''}`}
+                    role="listitem"
+                  >
+                    <button
+                      type="button"
+                      className="topbar-notifications-panel__dismiss"
+                      onClick={() => financialNotify.dismissNotification(item.id)}
+                      aria-label="Dismiss notification"
+                    >
+                      ×
+                    </button>
+                    {item.href ? (
+                      <button
+                        type="button"
+                        className="topbar-notifications-panel__body"
+                        onClick={() => {
+                          setNotificationPanelOpen(false);
+                          router.push(item.href!);
+                        }}
+                      >
+                        <span className="topbar-notifications-panel__item-title">{item.title}</span>
+                        <span className="topbar-notifications-panel__item-desc">{item.description}</span>
+                      </button>
+                    ) : (
+                      <div className="topbar-notifications-panel__body">
+                        <span className="topbar-notifications-panel__item-title">{item.title}</span>
+                        <span className="topbar-notifications-panel__item-desc">{item.description}</span>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
 
         <button type="button" className="action-btn" aria-label="Messages">
           <MessageCircle size={20} />

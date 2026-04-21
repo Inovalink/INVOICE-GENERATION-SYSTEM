@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { AnimationEvent } from 'react';
+import type { CSSProperties } from 'react';
 import {
   ArrowUpRight,
   Banknote,
@@ -15,6 +17,7 @@ import {
 } from 'lucide-react';
 import type { DashboardAlertRow } from '@/lib/dashboardAlerts';
 import { overdueRiskDisplayLabel } from '@/lib/invoiceDue';
+import { useFinancialAlertNotifications } from '@/components/notifications/FinancialAlertNotifications';
 import './DashboardAlerts.css';
 
 function formatTime(iso: string): string {
@@ -82,21 +85,194 @@ function AlertGlyph({
   }
 }
 
+const DEFAULT_POLL_MS = 18_000;
+
+/** Buffer for fallback timer (CSS animation duration is set in DashboardAlerts.css). */
+const ALERT_EXIT_FALLBACK_MS = 520;
+
 type Props = {
   alerts: DashboardAlertRow[];
+  /** When set (?date= on home), polling uses the same day scope as the server. */
+  financeDate?: string | null;
+  /** Client poll interval; set 0 to disable background refresh. */
+  pollIntervalMs?: number;
 };
 
-export default function DashboardAlerts({ alerts }: Props) {
-  const [completed, setCompleted] = useState<Record<string, boolean>>({});
+export default function DashboardAlerts({
+  alerts: initialAlerts,
+  financeDate = null,
+  pollIntervalMs = DEFAULT_POLL_MS,
+}: Props) {
+  const { processSnapshot, resetBaseline } = useFinancialAlertNotifications();
+  const scopeKey = financeDate?.trim() ? `day:${financeDate.trim()}` : 'default';
+
+  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
+  const [exiting, setExiting] = useState<Record<string, boolean>>({});
+  const [exitHeights, setExitHeights] = useState<Record<string, number>>({});
+  const rowRefs = useRef<Record<string, HTMLLIElement | null>>({});
+  const dismissFallbackTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const dismissStartedRef = useRef<Set<string>>(new Set());
+
+  const [remoteAlerts, setRemoteAlerts] = useState<DashboardAlertRow[] | null>(null);
+  const [liveError, setLiveError] = useState(false);
+
+  const finishDismiss = useCallback((id: string) => {
+    dismissStartedRef.current.delete(id);
+    const t = dismissFallbackTimers.current[id];
+    if (t) {
+      clearTimeout(t);
+      delete dismissFallbackTimers.current[id];
+    }
+    setDismissed((prev) => (prev[id] ? prev : { ...prev, [id]: true }));
+    setExiting((prev) => {
+      if (!prev[id]) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setExitHeights((prev) => {
+      if (!(id in prev)) return prev;
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+  }, []);
+
+  useEffect(
+    () => () => {
+      Object.values(dismissFallbackTimers.current).forEach(clearTimeout);
+      dismissFallbackTimers.current = {};
+    },
+    [],
+  );
+
+  const startDismiss = useCallback(
+    (id: string) => {
+      if (dismissStartedRef.current.has(id)) return;
+      dismissStartedRef.current.add(id);
+      const measuredHeight = rowRefs.current[id]?.getBoundingClientRect().height ?? 0;
+      setExitHeights((prev) => ({ ...prev, [id]: measuredHeight }));
+      setExiting((prev) => ({ ...prev, [id]: true }));
+      dismissFallbackTimers.current[id] = window.setTimeout(() => {
+        delete dismissFallbackTimers.current[id];
+        finishDismiss(id);
+      }, ALERT_EXIT_FALLBACK_MS);
+    },
+    [finishDismiss],
+  );
+
+  const onExitAnimationEnd = useCallback(
+    (id: string, e: AnimationEvent<HTMLLIElement>) => {
+      if (e.target !== e.currentTarget) return;
+      if (!e.animationName.includes('dashboard-alerts-item-dismiss')) return;
+      finishDismiss(id);
+    },
+    [finishDismiss],
+  );
+
+  useEffect(() => {
+    resetBaseline(scopeKey);
+  }, [financeDate, scopeKey, resetBaseline]);
+
+  useEffect(() => {
+    processSnapshot(scopeKey, initialAlerts, { syncOnly: true });
+  }, [initialAlerts, scopeKey, processSnapshot]);
+
+  useEffect(() => {
+    setRemoteAlerts(null);
+    setLiveError(false);
+  }, [financeDate, initialAlerts]);
+
+  const alerts = remoteAlerts ?? initialAlerts;
+
+  const buildPollUrl = useCallback(() => {
+    const u = new URL('/api/dashboard/alerts', window.location.origin);
+    if (financeDate?.trim()) {
+      u.searchParams.set('date', financeDate.trim());
+    }
+    return u.toString();
+  }, [financeDate]);
+
+  useEffect(() => {
+    if (pollIntervalMs <= 0) return undefined;
+
+    let cancelled = false;
+
+    const tick = async () => {
+      try {
+        const res = await fetch(buildPollUrl(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad status');
+        const data = (await res.json()) as { alerts?: unknown };
+        if (
+          !cancelled &&
+          Array.isArray(data.alerts) &&
+          data.alerts.every(
+            (row) =>
+              row &&
+              typeof row === 'object' &&
+              typeof (row as DashboardAlertRow).id === 'string' &&
+              typeof (row as DashboardAlertRow).at === 'string',
+          )
+        ) {
+          const rows = data.alerts as DashboardAlertRow[];
+          processSnapshot(scopeKey, rows);
+          setRemoteAlerts(rows);
+          setLiveError(false);
+        }
+      } catch {
+        if (!cancelled) setLiveError(true);
+      }
+    };
+
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const intervalMs = reducedMotion ? Math.max(pollIntervalMs, 60_000) : pollIntervalMs;
+
+    void tick();
+    const id = window.setInterval(() => void tick(), intervalMs);
+
+    const onVis = () => {
+      if (document.visibilityState === 'visible') void tick();
+    };
+    document.addEventListener('visibilitychange', onVis);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [buildPollUrl, pollIntervalMs, processSnapshot, scopeKey]);
+
   const timeline = useMemo(
     () => [...alerts].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime()),
     [alerts],
   );
 
+  const visibleTimeline = useMemo(
+    () => timeline.filter((a) => !dismissed[a.id]),
+    [timeline, dismissed],
+  );
+
   return (
     <section className="dashboard-alerts" aria-label="Financial timeline">
       <div className="dashboard-alerts__header">
-        <h2 className="dashboard-alerts__title">Financial Timeline</h2>
+        <div className="dashboard-alerts__title-row">
+          <h2 className="dashboard-alerts__title">Financial Timeline</h2>
+          {pollIntervalMs > 0 ? (
+            <span
+              className={`dashboard-alerts__live ${liveError ? 'dashboard-alerts__live--error' : ''}`}
+              title={
+                liveError
+                  ? 'Could not refresh timeline; will retry automatically.'
+                  : 'Timeline refreshes automatically every few seconds.'
+              }
+            >
+              <span className="dashboard-alerts__live-dot" aria-hidden />
+              Live
+            </span>
+          ) : null}
+        </div>
         <Link href="/invoices" className="dashboard-alerts__planner-link">
           Planner view
         </Link>
@@ -104,18 +280,18 @@ export default function DashboardAlerts({ alerts }: Props) {
 
       <div className="dashboard-alerts__today-strip">
         <span className="dashboard-alerts__section-label">Today</span>
-        <span className="dashboard-alerts__section-count" aria-label={`${timeline.length} items`}>
-          {timeline.length}
+        <span className="dashboard-alerts__section-count" aria-label={`${visibleTimeline.length} items`}>
+          {visibleTimeline.length}
         </span>
       </div>
 
       <ul className="dashboard-alerts__list" role="list">
-          {timeline.length === 0 ? (
+          {visibleTimeline.length === 0 ? (
             <li className="dashboard-alerts__empty">No timeline items right now.</li>
           ) : (
-            timeline.map((a) => {
+            visibleTimeline.map((a) => {
               const meta = parseMeta(a);
-              const done = completed[a.id];
+              const isExiting = Boolean(exiting[a.id]);
               return (
                 <li
                   key={a.id}
@@ -123,7 +299,18 @@ export default function DashboardAlerts({ alerts }: Props) {
                     a.kind === 'revenue' && a.revenueTrend
                       ? ` dashboard-alerts__item--revenue-trend-${a.revenueTrend}`
                       : ''
-                  }`}
+                  }${isExiting ? ' dashboard-alerts__item--exiting' : ''}`}
+                  ref={(node) => {
+                    rowRefs.current[a.id] = node;
+                  }}
+                  onAnimationEnd={(e) => onExitAnimationEnd(a.id, e)}
+                  style={
+                    isExiting
+                      ? ({
+                          ['--dashboard-alert-exit-height' as string]: `${Math.max(46, exitHeights[a.id] ?? 0)}px`,
+                        } as CSSProperties)
+                      : undefined
+                  }
                 >
                   <div className="dashboard-alerts__accent-bar" aria-hidden />
                   <div className="dashboard-alerts__item-body">
@@ -173,11 +360,12 @@ export default function DashboardAlerts({ alerts }: Props) {
                       </div>
                       <button
                         type="button"
-                        className={`dashboard-alerts__complete-btn ${done ? 'is-done' : ''}`}
-                        onClick={() => setCompleted((prev) => ({ ...prev, [a.id]: !prev[a.id] }))}
+                        className="dashboard-alerts__complete-btn"
+                        disabled={isExiting}
+                        onClick={() => startDismiss(a.id)}
                       >
                         <CheckCircle2 size={12} strokeWidth={2} aria-hidden />
-                        {done ? 'Completed' : 'Mark completed'}
+                        Mark completed
                       </button>
                     </div>
                   </div>

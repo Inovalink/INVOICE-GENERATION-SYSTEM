@@ -6,7 +6,6 @@ import { FileText, Send } from 'lucide-react';
 import './CreateInvoice.css';
 import DatePicker from '@/components/ui/DatePicker';
 import { getCurrencySymbol } from '@/lib/currencyDisplay';
-import { buildInvoiceCreatedAlertRow, dispatchNewAlertPushes } from '@/lib/dashboardAlertNotifications';
 
 type ClientParams = {
   id: string;
@@ -289,16 +288,14 @@ export default function CreateInvoice({
         total: number;
       };
       const clientName = clients.find((c) => c.id === clientId)?.name ?? 'Customer';
-      dispatchNewAlertPushes([
-        buildInvoiceCreatedAlertRow({
-          invoiceId: invoice.id,
-          invoiceNumber: invoice.invoiceNumber,
-          clientName,
-          total: Number(invoice.total),
-        }),
-      ]);
-
-      router.push('/invoices');
+      const next = new URLSearchParams({
+        ft_toast: 'invoice_created',
+        invoiceId: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        clientName,
+        invoiceTotal: String(Number(invoice.total)),
+      });
+      router.push(`/invoices?${next.toString()}`);
       router.refresh();
     } catch (e) {
       console.error(e);

@@ -235,7 +235,7 @@ export default async function Home({ searchParams }: PageProps) {
           </div>
           <div className="financial-charts-alerts__cluster">
             <aside className="financial-charts-alerts__sidebar">
-              <DashboardAlerts alerts={dashboardAlerts} />
+              <DashboardAlerts alerts={dashboardAlerts} financeDate={rawDate} />
             </aside>
 
             <section

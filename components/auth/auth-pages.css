@@ -543,6 +543,23 @@
   right: 1rem;
   left: auto;
   z-index: 10060;
+  align-items: flex-end;
+}
+
+/* Match app toasts: slide in from the right */
+.auth-otp-push-dock .alert-push.alert-push--enter {
+  animation: financial-push-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-otp-push-dock .alert-push.alert-push--leave {
+  animation: financial-push-leave 0.3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-otp-push-dock .alert-push.alert-push--enter,
+  .auth-otp-push-dock .alert-push.alert-push--leave {
+    animation: none;
+  }
 }
 
 .auth-otp-push-dock .alert-push {

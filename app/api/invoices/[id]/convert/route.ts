@@ -33,7 +33,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // In Next.js App Router, we usually redirect back to the invoice page or return success to a client component.
     // Since we used a simple HTML form action in the Server Component page, returning redirect response is best.
-    return NextResponse.redirect(new URL(`/invoices/${invoiceId}`, request.url), 303);
+    return NextResponse.redirect(
+      new URL(`/invoices/${invoiceId}?ft_toast=invoice_finalized`, request.url),
+      303,
+    );
   } catch (error) {
     console.error('Failed to convert invoice:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

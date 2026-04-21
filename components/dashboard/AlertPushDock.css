@@ -1,4 +1,4 @@
-/* Toast / push notifications (signup OTP success, future dashboard dock). */
+/* Toast / push notifications — shared primitives + financial dock (upper-right). */
 
 .alert-push-dock {
   position: fixed;
@@ -14,6 +14,313 @@
   pointer-events: auto;
 }
 
+/* ——— Financial notifications: upper-right, slide in from right ——— */
+.financial-alert-push-dock {
+  top: calc(env(safe-area-inset-top, 0px) + var(--header-height, 70px) + 0.65rem);
+  left: auto;
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  bottom: auto;
+  margin-left: 0;
+  margin-right: 0;
+  width: min(calc(100vw - 1.5rem), 21.5rem);
+  align-items: flex-end;
+  flex-direction: column-reverse;
+  gap: 0.65rem;
+  z-index: 10065;
+  max-height: min(42vh, 22rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  scrollbar-width: thin;
+}
+
+.financial-alert-push-dock::-webkit-scrollbar {
+  width: 4px;
+}
+
+.financial-alert-push-dock::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border-color) 80%, transparent);
+  border-radius: 4px;
+}
+
+/* Reference-style card: white panel, green left rail, mint icon tile, bottom progress */
+.financial-push-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  max-width: 21.5rem;
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 42%, white 58%);
+  background: #ffffff;
+  box-shadow:
+    0 1px 2px rgb(15 23 42 / 0.06),
+    0 18px 40px -14px rgb(15 23 42 / 0.16),
+    0 8px 16px -6px rgb(15 23 42 / 0.08);
+  overflow: hidden;
+  color: rgb(15 23 42);
+}
+
+.financial-push-card__top {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  min-width: 0;
+  /* Single box edge (no flex seam next to the main panel) keeps the accent solid */
+  border-left: 5px solid var(--primary, #16a34a);
+}
+
+.dark .financial-push-card {
+  border-color: color-mix(in srgb, var(--border-color) 88%, white 4%);
+  background: color-mix(in srgb, var(--bg-secondary) 97%, rgb(15 23 42));
+  color: var(--text-primary);
+  box-shadow:
+    0 1px 2px rgb(0 0 0 / 0.35),
+    0 20px 44px -12px rgb(0 0 0 / 0.5),
+    0 10px 22px -8px rgb(0 0 0 / 0.35);
+}
+
+.financial-push-card__main {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 2.625rem 1fr;
+  column-gap: 0.65rem;
+  row-gap: 0.35rem;
+  padding: 1rem 0.85rem 0.85rem 0.75rem;
+  align-items: start;
+}
+
+.financial-push-card__icon {
+  grid-column: 1;
+  grid-row: 1;
+  width: 2.625rem;
+  height: 2.625rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in oklch, var(--primary) 42%, black);
+  background: color-mix(in oklch, var(--primary) 16%, white);
+}
+
+.dark .financial-push-card__icon {
+  color: color-mix(in oklch, var(--primary) 72%, white);
+  background: color-mix(in oklch, var(--primary) 22%, rgb(30 41 59));
+}
+
+/* Subtle kind tint on mint tile (icon stays dark green family) */
+.financial-push-card__icon--kind-receipt {
+  background: color-mix(in oklch, var(--primary) 12%, #fef3c7);
+  color: color-mix(in oklch, var(--primary) 35%, #92400e);
+}
+
+.financial-push-card__icon--kind-overdue {
+  background: color-mix(in oklch, #ef4444 14%, white);
+  color: #b91c1c;
+}
+
+.financial-push-card__icon--kind-upcoming {
+  background: color-mix(in oklch, #eab308 14%, white);
+  color: #a16207;
+}
+
+.financial-push-card__icon--kind-revenue.financial-push-card__icon--revenue-down {
+  background: color-mix(in oklch, #f97316 14%, white);
+  color: #c2410c;
+}
+
+.dark .financial-push-card__icon--kind-receipt {
+  background: color-mix(in oklch, var(--primary) 12%, rgb(30 27 20));
+}
+
+.dark .financial-push-card__icon--kind-overdue {
+  background: color-mix(in oklch, #ef4444 18%, rgb(30 41 59));
+  color: #fca5a5;
+}
+
+.dark .financial-push-card__icon--kind-upcoming {
+  background: color-mix(in oklch, #eab308 16%, rgb(30 41 59));
+  color: #fde047;
+}
+
+.dark .financial-push-card__icon--kind-revenue.financial-push-card__icon--revenue-down {
+  background: color-mix(in oklch, #f97316 18%, rgb(30 41 59));
+  color: #fdba74;
+}
+
+.financial-push-card__topline {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.financial-push-card__title {
+  margin: 0.12rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--text-primary, rgb(15 23 42));
+}
+
+.financial-push-card__close {
+  flex-shrink: 0;
+  width: 1.7rem;
+  height: 1.7rem;
+  margin: 0;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgb(148 163 184);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.financial-push-card__close:hover {
+  background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+  color: var(--text-secondary);
+}
+
+.dark .financial-push-card__close {
+  color: rgb(148 163 184);
+}
+
+.financial-push-card__desc {
+  grid-column: 2;
+  grid-row: 2;
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-secondary, rgb(71 85 105));
+}
+
+.financial-push-card__time {
+  grid-column: 2;
+  grid-row: 3;
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: rgb(148 163 184);
+}
+
+.dark .financial-push-card__time {
+  color: rgb(148 163 184 / 0.9);
+}
+
+.financial-push-card__cta {
+  grid-column: 2;
+  grid-row: 4;
+  margin: 0.15rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--primary, #16a34a);
+  text-decoration: none;
+  width: fit-content;
+  transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+.financial-push-card__cta:hover {
+  color: color-mix(in oklch, var(--primary) 88%, black);
+  opacity: 0.92;
+}
+
+.dark .financial-push-card__cta {
+  color: color-mix(in oklch, var(--primary) 78%, white);
+}
+
+.financial-push-card__progress {
+  flex-shrink: 0;
+  height: 3px;
+  width: 100%;
+  background: color-mix(in srgb, var(--border-color) 55%, white 45%);
+  overflow: hidden;
+}
+
+.dark .financial-push-card__progress {
+  background: color-mix(in srgb, var(--border-color) 70%, transparent);
+}
+
+.financial-push-card__progress-bar {
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  background: var(--primary, #16a34a);
+  animation: financial-push-progress-shrink var(--push-duration, 5.2s) linear forwards;
+}
+
+/* Enter / leave: slide from right */
+.financial-alert-push-dock .financial-push-card.financial-push-card--enter {
+  animation: financial-push-enter 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.financial-alert-push-dock .financial-push-card.financial-push-card--leave {
+  animation: financial-push-leave 0.3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes financial-push-progress-shrink {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes financial-push-enter {
+  from {
+    opacity: 0;
+    transform: translateX(calc(100% + 1.25rem));
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes financial-push-leave {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(calc(100% + 1rem));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .financial-alert-push-dock .financial-push-card.financial-push-card--enter,
+  .financial-alert-push-dock .financial-push-card.financial-push-card--leave {
+    animation: none;
+  }
+
+  .financial-push-card__progress-bar {
+    animation: none;
+    transform: scaleX(0.35);
+  }
+
+  .financial-push-card__cta:hover,
+  .financial-push-card__close:hover {
+    transform: none;
+  }
+}
+
+@media print {
+  .financial-alert-push-dock {
+    display: none !important;
+  }
+}
+
+/* ——— Legacy base (e.g. signup OTP dock) ——— */
 .alert-push {
   position: relative;
   width: min(100vw - 2rem, 26rem);
@@ -90,7 +397,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .alert-push__close:hover {

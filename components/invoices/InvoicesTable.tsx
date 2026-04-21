@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   Banknote,
   Check,
@@ -205,6 +206,9 @@ export default function InvoicesTable({
   variant?: 'full' | 'dashboard';
   dashboardTitle?: string;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isDashboard = variant === 'dashboard';
   type PaymentChoice = 'CASH' | 'MTN_MOMO' | 'TELECEL_CASH' | 'BANK_TRANSFER';
   const [selected, setSelected] = useState<InvoiceSummary | null>(null);
@@ -234,6 +238,16 @@ export default function InvoicesTable({
   const [dashboardFilterDateTo, setDashboardFilterDateTo] = useState('');
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const receiptIdParam = searchParams.get('receiptId');
+    if (!receiptIdParam) return;
+    setViewReceiptId(receiptIdParam);
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('receiptId');
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `${pathname}?${nextQuery}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   useEffect(() => {
     if (!statusMenuOpen) return;

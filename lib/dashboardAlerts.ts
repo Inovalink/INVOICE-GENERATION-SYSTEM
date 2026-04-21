@@ -224,7 +224,7 @@ export async function buildDashboardAlerts(
     alerts.push({
       id: `sys-inv-${inv.id}`,
       kind: 'system',
-      title: 'Invoice created',
+      title: 'Invoice issued',
       description: `Invoice #${inv.invoiceNumber} for ${inv.client.name} (${formatGhs(inv.total)}).`,
       at: inv.createdAt.toISOString(),
       unread: false,

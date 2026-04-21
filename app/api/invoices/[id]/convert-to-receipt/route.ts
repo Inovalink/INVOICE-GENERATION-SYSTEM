@@ -22,8 +22,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     if (invoice.receipt) {
-      // Receipt already exists, redirect to it
-      return NextResponse.redirect(new URL(`/receipts/${invoice.receipt.id}`, request.url), 303);
+      return NextResponse.redirect(
+        new URL(`/receipts/${invoice.receipt.id}?ft_toast=receipt_generated`, request.url),
+        303,
+      );
     }
 
     // Must be PAID (or PARTIALLY_PAID depending on business logic, but typically PAID goes to receipt)
@@ -67,8 +69,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
     await indexInvoiceById(invoiceId);
 
-    // Redirect to the newly created receipt
-    return NextResponse.redirect(new URL(`/receipts/${receipt.id}`, request.url), 303);
+    return NextResponse.redirect(
+      new URL(`/receipts/${receipt.id}?ft_toast=receipt_generated`, request.url),
+      303,
+    );
   } catch (error) {
     console.error('Failed to convert to receipt:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

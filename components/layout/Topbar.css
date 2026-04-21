@@ -216,6 +216,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.65rem;
+  position: relative;
 }
 
 .theme-toggle-btn {
@@ -283,6 +284,114 @@
   background-color: var(--danger);
   border-radius: 50%;
   border: 2px solid var(--bg-secondary);
+}
+
+.topbar-notifications-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 7.2rem;
+  width: min(420px, 92vw);
+  max-height: min(62vh, 520px);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--bg-secondary);
+  box-shadow: var(--shadow-md);
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar-notifications-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.topbar-notifications-panel__title {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.topbar-notifications-panel__clear {
+  border: none;
+  background: transparent;
+  color: var(--accent-primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.topbar-notifications-panel__list {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar-notifications-panel__empty {
+  margin: 0;
+  padding: 1rem;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.topbar-notifications-panel__item {
+  position: relative;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.topbar-notifications-panel__item.is-unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent-primary);
+}
+
+.topbar-notifications-panel__body {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0.75rem 1.9rem 0.75rem 0.95rem;
+  flex-direction: column;
+  gap: 0.2rem;
+  cursor: pointer;
+}
+
+.topbar-notifications-panel__item-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.topbar-notifications-panel__item-desc {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.topbar-notifications-panel__dismiss {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.45rem;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
 }
 
 .user-profile-menu {

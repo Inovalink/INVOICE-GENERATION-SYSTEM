@@ -1,4 +1,5 @@
 import type { DashboardAlertRow } from '@/lib/dashboardAlerts';
+import { formatGhs } from '@/lib/formatGhs';
 
 type InvoiceCreatedInput = {
   invoiceId: string;
@@ -7,20 +8,44 @@ type InvoiceCreatedInput = {
   total: number;
 };
 
-/** Stub: previously pushed live alert dock events; kept for CreateInvoice compatibility. */
-export function buildInvoiceCreatedAlertRow(_input: InvoiceCreatedInput): DashboardAlertRow {
+type Listener = (rows: DashboardAlertRow[]) => void;
+
+let listener: Listener | null = null;
+/** Rows dispatched before the provider mounted its listener (e.g. very fast POST after navigation). */
+let pendingRows: DashboardAlertRow[] = [];
+
+/** Wired by `FinancialAlertNotificationsProvider` so any screen can fire dock toasts. */
+export function setDashboardAlertPushListener(fn: Listener | null) {
+  listener = fn;
+}
+
+/** Called once when the listener is registered; replays any early dispatches. */
+export function flushPendingDashboardAlertPushes(emit: (row: DashboardAlertRow) => void): void {
+  if (pendingRows.length === 0) return;
+  for (const row of pendingRows) {
+    emit(row);
+  }
+  pendingRows = [];
+}
+
+export function buildInvoiceCreatedAlertRow(input: InvoiceCreatedInput): DashboardAlertRow {
   return {
-    id: `invoice-created-${_input.invoiceId}`,
+    /** Must match `buildDashboardAlerts` recent-invoice id so polling does not duplicate the toast. */
+    id: `sys-inv-${input.invoiceId}`,
     kind: 'system',
-    title: 'Invoice saved',
-    description: `${_input.invoiceNumber} · ${_input.clientName}`,
+    title: 'Invoice issued',
+    description: `Invoice #${input.invoiceNumber} for ${input.clientName} (${formatGhs(input.total)}).`,
     at: new Date().toISOString(),
     unread: true,
-    iconVariant: 'bill',
-    href: `/invoices/${_input.invoiceId}`,
+    iconVariant: 'shield',
+    href: `/invoices/${input.invoiceId}`,
   };
 }
 
-export function dispatchNewAlertPushes(_rows: DashboardAlertRow[]): void {
-  // No-op: real-time dock was removed from the project snapshot.
+export function dispatchNewAlertPushes(rows: DashboardAlertRow[]): void {
+  if (listener) {
+    listener(rows);
+  } else {
+    pendingRows.push(...rows);
+  }
 }

@@ -134,7 +134,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // For partial payments, go back to invoices list.
     if (nextDue > 0) {
-      return NextResponse.redirect(new URL('/invoices', request.url), 303);
+      const partialUrl = new URL('/invoices', request.url);
+      partialUrl.searchParams.set('ft_toast', 'partial_payment');
+      partialUrl.searchParams.set('invoiceId', invoiceId);
+      return NextResponse.redirect(partialUrl, 303);
     }
 
     // 3. Generate or update receipt for fully paid invoice
@@ -169,8 +172,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
     await indexInvoiceById(invoiceId);
 
-    // Redirect to the newly created receipt
-    return NextResponse.redirect(new URL(`/receipts/${receipt.id}`, request.url), 303);
+    // Return to invoice list and auto-open receipt modal there.
+    const receiptUrl = new URL('/invoices', request.url);
+    receiptUrl.searchParams.set('ft_toast', 'receipt_from_payment');
+    receiptUrl.searchParams.set('invoiceId', invoice.id);
+    receiptUrl.searchParams.set('paymentAmount', String(paymentAmount));
+    receiptUrl.searchParams.set('receiptId', receipt.id);
+    return NextResponse.redirect(receiptUrl, 303);
   } catch (error) {
     console.error('Failed to process payment:', error);
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 });

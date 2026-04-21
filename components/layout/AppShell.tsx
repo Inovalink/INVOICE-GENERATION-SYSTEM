@@ -1,11 +1,19 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import FinancialActivityFlash from '@/components/notifications/FinancialActivityFlash';
+import {
+  FinancialAlertNotificationsProvider,
+  GlobalFinancialAlertSubscriber,
+} from '@/components/notifications/FinancialAlertNotifications';
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
 import type { AuthMeClientState } from '@/lib/auth/authMeClient';
+import { usePathname } from 'next/navigation';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAuthRoute = pathname === '/login' || pathname.startsWith('/signup');
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -40,8 +48,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const onCloseMobile = useCallback(() => setMobileOpen(false), []);
   const onToggleMobileSidebar = useCallback(() => setMobileOpen((o) => !o), []);
 
+  if (isAuthRoute) {
+    return (
+      <main className="main-content main-content--auth">
+        <div className="page-container page-container--auth">{children}</div>
+      </main>
+    );
+  }
+
   return (
-    <>
+    <FinancialAlertNotificationsProvider>
       <Sidebar
         collapsed={collapsed}
         onToggleCollapsed={onToggleCollapsed}
@@ -55,6 +71,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Topbar showSidebarToggle={isMobile} onToggleSidebar={onToggleMobileSidebar} />
         <div className="page-container">{children}</div>
       </main>
-    </>
+      <Suspense fallback={null}>
+        <FinancialActivityFlash />
+      </Suspense>
+      <GlobalFinancialAlertSubscriber enabled={Boolean(authMe?.authenticated)} />
+    </FinancialAlertNotificationsProvider>
   );
 }

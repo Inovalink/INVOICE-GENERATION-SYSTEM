@@ -77,8 +77,9 @@ export default async function InvoiceViewPage({ params }: { params: { id: string
 
           {(invoice.status === 'FINAL' || invoice.status === 'PARTIALLY_PAID') && (
             <form action={`/api/invoices/${invoice.id}/pay`} method="POST" style={{ display: 'inline' }}>
-              <input type="hidden" name="amount" value={invoice.total} />
-              <input type="hidden" name="paymentMethod" value="BANK_TRANSFER" />
+              <input type="hidden" name="paymentKind" value="full" />
+              <input type="hidden" name="amount" value={invoice.amountDue} />
+              <input type="hidden" name="paymentMethod" value="CASH" />
               <button type="submit" className="btn btn-primary flex items-center gap-2" style={{ backgroundColor: 'var(--success)' }}>
                 <CheckCircle size={16} /> Record Full Payment
               </button>

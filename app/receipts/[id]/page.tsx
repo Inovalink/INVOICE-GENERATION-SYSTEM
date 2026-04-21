@@ -2,13 +2,15 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { getPaymentMethodTitle } from '@/lib/paymentDisplay';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
+import PrintButton from '@/components/invoices/PrintButton';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ReceiptViewPage({ params }: { params: { id: string } }) {
+export default async function ReceiptViewPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
   const receipt = await prisma.receipt.findUnique({
-    where: { id: params.id },
+    where: { id: resolvedParams.id },
     include: {
       invoice: {
         include: {
@@ -45,9 +47,7 @@ export default async function ReceiptViewPage({ params }: { params: { id: string
           <p>For Invoice {receipt.invoice.invoiceNumber}</p>
         </div>
         <div className="flex gap-4">
-          <button className="btn btn-outline" onClick={() => window.print()}>
-            Print / Save PDF
-          </button>
+          <PrintButton />
         </div>
       </div>
 

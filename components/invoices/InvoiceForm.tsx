@@ -104,7 +104,20 @@ export default function InvoiceForm({
       });
 
       if (response.ok) {
-        router.push('/invoices');
+        const invoice = (await response.json()) as {
+          id: string;
+          invoiceNumber: string;
+          total: number;
+        };
+        const clientName = clients.find((c) => c.id === clientId)?.name ?? 'Customer';
+        const next = new URLSearchParams({
+          ft_toast: 'invoice_created',
+          invoiceId: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          clientName,
+          invoiceTotal: String(Number(invoice.total) || 0),
+        });
+        router.push(`/invoices?${next.toString()}`);
         router.refresh();
       } else {
         const error = await response.json();

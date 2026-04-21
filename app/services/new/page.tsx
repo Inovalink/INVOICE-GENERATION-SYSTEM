@@ -16,7 +16,7 @@ async function createService(formData: FormData) {
     data: { name, category, description, price, isHourly }
   });
 
-  redirect('/services');
+  redirect('/services?ft_toast=service_added');
 }
 
 export default function NewServicePage() {

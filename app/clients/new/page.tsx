@@ -16,7 +16,7 @@ async function createClient(formData: FormData) {
     data: { name, company, email, phone, address }
   });
 
-  redirect('/clients');
+  redirect('/clients?ft_toast=client_added');
 }
 
 export default function NewClientPage() {
