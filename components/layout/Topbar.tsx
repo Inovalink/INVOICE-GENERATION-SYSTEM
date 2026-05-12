@@ -38,7 +38,7 @@ type MeResponse = {
 
 type GlobalSuggestion = {
   id: string;
-  kind: 'invoice' | 'payment' | 'receipt' | 'client' | 'service' | 'task' | 'keyword';
+  kind: 'invoice' | 'payment' | 'receipt' | 'client' | 'service' | 'task' | 'keyword' | 'date' | 'period';
   label: string;
   subLabel?: string;
   href: string;
