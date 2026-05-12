@@ -14,14 +14,57 @@ const safeNumber = (value: unknown) => {
 
 export const dynamic = 'force-dynamic';
 
-export default async function InvoicesPage() {
+type PageProps = {
+  searchParams?: Promise<{ from?: string; to?: string }>;
+};
+
+function parseRangeDate(raw: string | undefined): Date | null {
+  if (!raw) return null;
+  const d = new Date(`${raw}T00:00:00`);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function formatRangeLabel(from: Date, to: Date): string {
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+  const f = from.toLocaleDateString('en-US', opts);
+  const t = to.toLocaleDateString('en-US', opts);
+  return f === t ? f : `${f} — ${t}`;
+}
+
+export default async function InvoicesPage({ searchParams }: PageProps) {
+  const sp = (await searchParams) ?? {};
+  const fromDate = parseRangeDate(sp.from);
+  const toDate = parseRangeDate(sp.to);
+  const hasRange = fromDate !== null && toDate !== null;
+
+  // End of the "to" day (inclusive)
+  const toDateEnd = toDate ? new Date(toDate.getTime() + 24 * 60 * 60 * 1000) : null;
+
   const [invoices, overdueSourceRows] = await Promise.all([
     prisma.invoice.findMany({
+      where: hasRange
+        ? { issueDate: { gte: fromDate!, lt: toDateEnd! } }
+        : undefined,
       orderBy: { createdAt: 'desc' },
-      include: {
-        client: true,
-        receipt: true,
-        items: true,
+      select: {
+        id: true,
+        invoiceNumber: true,
+        subtotal: true,
+        discount: true,
+        tax: true,
+        total: true,
+        totalAmount: true,
+        depositAmount: true,
+        amountDue: true,
+        paymentStatus: true,
+        status: true,
+        issueDate: true,
+        dueDate: true,
+        paymentTerms: true,
+        notes: true,
+        client: { select: { name: true, company: true, address: true, email: true } },
+        receipt: { select: { id: true } },
+        items: { select: { id: true, description: true, quantity: true, unitPrice: true } },
       },
     }),
     getOverdueSourceRows(prisma),
@@ -69,12 +112,24 @@ export default async function InvoicesPage() {
     receipt: inv.receipt ? { id: inv.receipt.id } : null,
   }));
 
+  const rangeLabel = hasRange ? formatRangeLabel(fromDate!, toDate!) : null;
+
   return (
     <div className="invoices-list-page">
       <OverdueInvoicesAlert invoices={overdueInvoices} />
       <div className="content-card">
         <div className="content-card-header">
-          <h3>All Invoices</h3>
+          <div>
+            <h3>{rangeLabel ? `Invoices — ${rangeLabel}` : 'All Invoices'}</h3>
+            {hasRange && (
+              <p style={{ margin: '0.2rem 0 0', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                {invoicesForClient.length} invoice{invoicesForClient.length !== 1 ? 's' : ''} issued in this period.{' '}
+                <Link href="/invoices" style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>
+                  View all
+                </Link>
+              </p>
+            )}
+          </div>
           <Link href="/invoices/new" className="btn btn-primary create-invoice-btn">
             Create Invoice
           </Link>

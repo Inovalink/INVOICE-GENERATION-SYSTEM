@@ -777,6 +777,28 @@
   background: #ffffff;
 }
 
+.dark .auth-otp__hero-icon {
+  background: color-mix(in srgb, var(--accent-primary) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, transparent);
+}
+
+.dark .auth-otp__digit {
+  background: oklch(0.2 0.006 285);
+  border-color: oklch(1 0 0 / 14%);
+  color: var(--text-primary);
+}
+
+.dark .auth-otp__digit:hover {
+  border-color: oklch(1 0 0 / 22%);
+  background: oklch(0.22 0.006 285);
+}
+
+.dark .auth-otp__digit:focus {
+  background: var(--card);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-primary) 28%, transparent);
+}
+
 .auth-otp__resend {
   border: none;
   background: transparent;
@@ -1535,6 +1557,21 @@
   color: color-mix(in srgb, #ffffff 90%, var(--accent-primary));
   box-shadow: none;
   transform: none;
+  cursor: not-allowed;
+}
+
+.dark .auth-btn-next:disabled {
+  background: color-mix(in srgb, var(--accent-primary) 14%, oklch(0.22 0.008 285));
+  border-color: color-mix(in srgb, var(--accent-primary) 20%, var(--border-color));
+  color: color-mix(in srgb, var(--accent-primary) 38%, oklch(0.52 0.012 286));
+  box-shadow: none;
+}
+
+.dark .auth-btn-back:disabled,
+.dark .btn-outline:disabled {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--border-color) 55%, transparent);
+  color: oklch(0.48 0.01 286);
   cursor: not-allowed;
 }
 

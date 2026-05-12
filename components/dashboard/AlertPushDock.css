@@ -131,6 +131,11 @@
   color: #c2410c;
 }
 
+.financial-push-card__icon--kind-error {
+  background: color-mix(in oklch, #ef4444 14%, white);
+  color: #b91c1c;
+}
+
 .dark .financial-push-card__icon--kind-receipt {
   background: color-mix(in oklch, var(--primary) 12%, rgb(30 27 20));
 }
@@ -148,6 +153,11 @@
 .dark .financial-push-card__icon--kind-revenue.financial-push-card__icon--revenue-down {
   background: color-mix(in oklch, #f97316 18%, rgb(30 41 59));
   color: #fdba74;
+}
+
+.dark .financial-push-card__icon--kind-error {
+  background: color-mix(in oklch, #ef4444 18%, rgb(30 41 59));
+  color: #fca5a5;
 }
 
 .financial-push-card__topline {

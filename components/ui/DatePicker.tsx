@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import './DatePicker.css';
 
 type DatePickerProps = {
@@ -57,6 +57,7 @@ export default function DatePicker({
   }
 
   const [open, setOpen] = useState(false);
+  const [alignRight, setAlignRight] = useState(false);
   const [viewYear, setViewYear] = useState(
     selected?.getFullYear() ?? today.getFullYear(),
   );
@@ -65,6 +66,7 @@ export default function DatePicker({
   );
 
   const ref = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -82,6 +84,18 @@ export default function DatePicker({
       setViewMonth(selected.getMonth());
     }
   }, [value]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setAlignRight(false);
+      return;
+    }
+    if (!popupRef.current) return;
+    const rect = popupRef.current.getBoundingClientRect();
+    if (rect.right > window.innerWidth - 8) {
+      setAlignRight(true);
+    }
+  }, [open]);
 
   const prevMonth = () => {
     if (viewMonth === 0) {
@@ -155,80 +169,95 @@ export default function DatePicker({
       </button>
 
       {open && !disabled && (
-        <div className="dp-popup">
-          <div className="dp-header">
-            <button
-              type="button"
-              className="dp-nav"
-              onClick={prevMonth}
-              aria-label="Previous month"
-            >
-              <svg viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M10 12L6 8l4-4"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-            <span className="dp-month-year">
-              {MONTHS[viewMonth]} {viewYear}
-            </span>
-            <button
-              type="button"
-              className="dp-nav"
-              onClick={nextMonth}
-              aria-label="Next month"
-            >
-              <svg viewBox="0 0 16 16" fill="none">
-                <path
-                  d="M6 4l4 4-4 4"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
-          </div>
-
-          <div className="dp-grid">
-            {DAYS.map((d) => (
-              <span key={d} className="dp-dow">
-                {d}
+        <div ref={popupRef} className={`dp-popup${alignRight ? ' dp-popup--right' : ''}`}>
+          <div className="dp-popup-inner">
+            <div className="dp-header">
+              <button
+                type="button"
+                className="dp-nav"
+                onClick={prevMonth}
+                aria-label="Previous month"
+              >
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M10 12L6 8l4-4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+              <span className="dp-month-year">
+                {MONTHS[viewMonth]} {viewYear}
               </span>
-            ))}
+              <button
+                type="button"
+                className="dp-nav"
+                onClick={nextMonth}
+                aria-label="Next month"
+              >
+                <svg viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M6 4l4 4-4 4"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
 
-            {cells.map((day, i) => {
-              if (!day) return <span key={`empty-${i}`} className="dp-empty-cell" />;
+            <div className="dp-grid">
+              {DAYS.map((d) => (
+                <span key={d} className="dp-dow">
+                  {d}
+                </span>
+              ))}
 
-              const cellDate = new Date(viewYear, viewMonth, day);
-              cellDate.setHours(0, 0, 0, 0);
+              {cells.map((day, i) => {
+                if (!day) return <span key={`empty-${i}`} className="dp-empty-cell" />;
 
-              const isToday = cellDate.getTime() === today.getTime();
-              const isSelected = selected
-                ? cellDate.getTime() === selected.getTime()
-                : false;
+                const cellDate = new Date(viewYear, viewMonth, day);
+                cellDate.setHours(0, 0, 0, 0);
 
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => handleDayClick(day)}
-                  className={[
-                    'dp-day',
-                    isToday && !isSelected ? 'dp-day--today' : '',
-                    isSelected ? 'dp-day--selected' : '',
-                  ]
-                    .filter(Boolean)
-                    .join(' ')}
-                >
-                  {day}
-                </button>
-              );
-            })}
+                const isToday = cellDate.getTime() === today.getTime();
+                const isSelected = selected
+                  ? cellDate.getTime() === selected.getTime()
+                  : false;
+
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => handleDayClick(day)}
+                    className={[
+                      'dp-day',
+                      isToday && !isSelected ? 'dp-day--today' : '',
+                      isSelected ? 'dp-day--selected' : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    {day}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="dp-footer">
+              <button
+                type="button"
+                className="dp-today-btn"
+                onClick={() => {
+                  onChange(toLocalISO(today));
+                  setOpen(false);
+                }}
+              >
+                Today
+              </button>
+            </div>
           </div>
         </div>
       )}

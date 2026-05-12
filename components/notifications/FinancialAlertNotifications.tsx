@@ -14,6 +14,7 @@ import {
 } from 'react';
 import { Banknote, FileText, Receipt, TrendingDown, TrendingUp, TriangleAlert, X } from 'lucide-react';
 import type { DashboardAlertRow } from '@/lib/dashboardAlerts';
+import { playPushSound, playFailedSound, primeNotificationSounds } from '@/lib/notificationSound';
 import {
   flushPendingDashboardAlertPushes,
   setDashboardAlertPushListener,
@@ -68,6 +69,8 @@ function PushIcon({
       return <Receipt {...c} />;
     case 'revenue':
       return revenueTrend === 'up' ? <TrendingUp {...c} /> : <TrendingDown {...c} />;
+    case 'error':
+      return <TriangleAlert {...c} />;
     default:
       return <TriangleAlert {...c} />;
   }
@@ -82,6 +85,11 @@ type ActivityToastInput = {
   kind?: DashboardAlertRow['kind'];
 };
 
+type ErrorToastInput = {
+  title: string;
+  description?: string;
+};
+
 type Ctx = {
   processSnapshot: (
     scopeKey: string,
@@ -92,6 +100,8 @@ type Ctx = {
   requestDesktopPermission: () => Promise<NotificationPermission | null>;
   desktopPermission: NotificationPermission | 'unsupported';
   pushActivityNotification: (input: ActivityToastInput) => void;
+  pushErrorNotification: (input: ErrorToastInput) => void;
+  syncNotificationInbox: (rows: DashboardAlertRow[]) => void;
   notificationInbox: DashboardAlertRow[];
   unreadNotificationCount: number;
   markAllNotificationsRead: () => void;
@@ -168,16 +178,11 @@ export function FinancialAlertNotificationsProvider({ children }: { children: Re
   const baselinesRef = useRef<Record<string, Set<string>>>({});
   const dedupeRef = useRef<Map<string, number>>(new Map());
   const [desktopPermission, setDesktopPermission] = useState<NotificationPermission | 'unsupported'>(
-    'unsupported',
+    () => {
+      if (typeof Notification === 'undefined') return 'unsupported';
+      return Notification.permission;
+    },
   );
-
-  useEffect(() => {
-    if (typeof Notification === 'undefined') {
-      setDesktopPermission('unsupported');
-      return;
-    }
-    setDesktopPermission(Notification.permission);
-  }, []);
 
   const emitToast = useCallback((row: DashboardAlertRow) => {
     const now = Date.now();
@@ -189,6 +194,12 @@ export function FinancialAlertNotificationsProvider({ children }: { children: Re
       for (const [k, t] of dedupeRef.current) {
         if (t < cutoff) dedupeRef.current.delete(k);
       }
+    }
+
+    if (row.kind === 'error') {
+      playFailedSound();
+    } else {
+      playPushSound();
     }
 
     const reactKey = `${row.id}-${now}`;
@@ -234,6 +245,50 @@ export function FinancialAlertNotificationsProvider({ children }: { children: Re
     },
     [emitToast],
   );
+
+  const pushErrorNotification = useCallback(
+    (input: ErrorToastInput) => {
+      const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      const row: DashboardAlertRow = {
+        id: `ft-error-${suffix}`,
+        kind: 'error',
+        title: input.title,
+        description: input.description ?? '',
+        at: new Date().toISOString(),
+        unread: true,
+        iconVariant: 'flag',
+      };
+      emitToast(row);
+    },
+    [emitToast],
+  );
+
+  const syncNotificationInbox = useCallback((rows: DashboardAlertRow[]) => {
+    setNotificationInbox((prev) => {
+      const unreadById = new Map(prev.map((item) => [item.id, item.unread]));
+      return rows
+        .slice(0, 50)
+        .map((row) => ({
+          ...row,
+          unread: unreadById.get(row.id) ?? row.unread,
+        }));
+    });
+  }, []);
+
+  useEffect(() => {
+    primeNotificationSounds();
+    const unlock = () => {
+      primeNotificationSounds();
+      document.removeEventListener('pointerdown', unlock, true);
+      document.removeEventListener('keydown', unlock, true);
+    };
+    document.addEventListener('pointerdown', unlock, true);
+    document.addEventListener('keydown', unlock, true);
+    return () => {
+      document.removeEventListener('pointerdown', unlock, true);
+      document.removeEventListener('keydown', unlock, true);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     setDashboardAlertPushListener((rows) => {
@@ -296,6 +351,11 @@ export function FinancialAlertNotificationsProvider({ children }: { children: Re
 
   const dismissNotification = useCallback((id: string) => {
     setNotificationInbox((prev) => prev.filter((item) => item.id !== id));
+    void fetch('/api/dashboard/alerts/dismiss', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alertId: id }),
+    });
   }, []);
 
   const ctx = useMemo(
@@ -305,6 +365,8 @@ export function FinancialAlertNotificationsProvider({ children }: { children: Re
       requestDesktopPermission,
       desktopPermission,
       pushActivityNotification,
+      pushErrorNotification,
+      syncNotificationInbox,
       notificationInbox,
       unreadNotificationCount,
       markAllNotificationsRead,
@@ -316,6 +378,8 @@ export function FinancialAlertNotificationsProvider({ children }: { children: Re
       requestDesktopPermission,
       desktopPermission,
       pushActivityNotification,
+      pushErrorNotification,
+      syncNotificationInbox,
       notificationInbox,
       unreadNotificationCount,
       markAllNotificationsRead,
@@ -356,9 +420,11 @@ export function useFinancialAlertNotificationsSafe(): Ctx | null {
 export function GlobalFinancialAlertSubscriber({ enabled }: { enabled: boolean }) {
   const ctx = useFinancialAlertNotificationsSafe();
   const processSnapshot = ctx?.processSnapshot;
+  const syncNotificationInbox = ctx?.syncNotificationInbox;
+  const errorEpisodeRef = useRef(false);
 
   useEffect(() => {
-    if (!enabled || !processSnapshot) return undefined;
+    if (!enabled || !processSnapshot || !syncNotificationInbox) return undefined;
 
     let cancelled = false;
 
@@ -379,9 +445,15 @@ export function GlobalFinancialAlertSubscriber({ enabled }: { enabled: boolean }
         ) {
           return;
         }
-        processSnapshot('default', data.alerts as DashboardAlertRow[]);
+        const alerts = data.alerts as DashboardAlertRow[];
+        errorEpisodeRef.current = false;
+        syncNotificationInbox(alerts);
+        processSnapshot('default', alerts);
       } catch {
-        /* ignore */
+        if (!cancelled && !errorEpisodeRef.current) {
+          errorEpisodeRef.current = true;
+          playFailedSound();
+        }
       }
     };
 
@@ -402,7 +474,7 @@ export function GlobalFinancialAlertSubscriber({ enabled }: { enabled: boolean }
       window.clearInterval(id);
       document.removeEventListener('visibilitychange', onVis);
     };
-  }, [enabled, processSnapshot]);
+  }, [enabled, processSnapshot, syncNotificationInbox]);
 
   return null;
 }

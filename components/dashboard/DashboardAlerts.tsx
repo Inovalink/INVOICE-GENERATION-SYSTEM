@@ -18,6 +18,7 @@ import {
 import type { DashboardAlertRow } from '@/lib/dashboardAlerts';
 import { overdueRiskDisplayLabel } from '@/lib/invoiceDue';
 import { useFinancialAlertNotifications } from '@/components/notifications/FinancialAlertNotifications';
+import { playFailedSound } from '@/lib/notificationSound';
 import './DashboardAlerts.css';
 
 function formatTime(iso: string): string {
@@ -79,7 +80,16 @@ function AlertGlyph({
     case 'receipt':
       return <Receipt {...common} />;
     case 'revenue':
-      return revenueTrend === 'up' ? <TrendingUp {...common} /> : <TrendingDown {...common} />;
+      return revenueTrend === 'up' ? (
+        <TrendingUp {...common} className="dashboard-alerts__trend-icon dashboard-alerts__trend-icon--up" />
+      ) : (
+        <TrendingDown
+          {...common}
+          className="dashboard-alerts__trend-icon dashboard-alerts__trend-icon--down"
+        />
+      );
+    case 'error':
+      return <TriangleAlert {...common} />;
     default:
       return <TriangleAlert {...common} />;
   }
@@ -110,11 +120,12 @@ export default function DashboardAlerts({
   const [exiting, setExiting] = useState<Record<string, boolean>>({});
   const [exitHeights, setExitHeights] = useState<Record<string, number>>({});
   const rowRefs = useRef<Record<string, HTMLLIElement | null>>({});
-  const dismissFallbackTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const dismissFallbackTimers = useRef<Record<string, number>>({});
   const dismissStartedRef = useRef<Set<string>>(new Set());
 
   const [remoteAlerts, setRemoteAlerts] = useState<DashboardAlertRow[] | null>(null);
   const [liveError, setLiveError] = useState(false);
+  const pollErrorEpisodeRef = useRef(false);
 
   const finishDismiss = useCallback((id: string) => {
     dismissStartedRef.current.delete(id);
@@ -150,6 +161,13 @@ export default function DashboardAlerts({
     (id: string) => {
       if (dismissStartedRef.current.has(id)) return;
       dismissStartedRef.current.add(id);
+
+      void fetch('/api/dashboard/alerts/dismiss', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alertId: id }),
+      });
+
       const measuredHeight = rowRefs.current[id]?.getBoundingClientRect().height ?? 0;
       setExitHeights((prev) => ({ ...prev, [id]: measuredHeight }));
       setExiting((prev) => ({ ...prev, [id]: true }));
@@ -181,6 +199,7 @@ export default function DashboardAlerts({
   useEffect(() => {
     setRemoteAlerts(null);
     setLiveError(false);
+    pollErrorEpisodeRef.current = false;
   }, [financeDate, initialAlerts]);
 
   const alerts = remoteAlerts ?? initialAlerts;
@@ -215,12 +234,19 @@ export default function DashboardAlerts({
           )
         ) {
           const rows = data.alerts as DashboardAlertRow[];
+          pollErrorEpisodeRef.current = false;
           processSnapshot(scopeKey, rows);
           setRemoteAlerts(rows);
           setLiveError(false);
         }
       } catch {
-        if (!cancelled) setLiveError(true);
+        if (!cancelled) {
+          setLiveError(true);
+          if (!pollErrorEpisodeRef.current) {
+            pollErrorEpisodeRef.current = true;
+            playFailedSound();
+          }
+        }
       }
     };
 

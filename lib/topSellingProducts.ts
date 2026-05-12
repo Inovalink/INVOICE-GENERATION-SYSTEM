@@ -46,7 +46,13 @@ export async function getTopSellingProducts(
           '(Unnamed)'
         ) AS productName,
         SUM(ii.quantity) AS totalQuantity,
-        SUM(ii.quantity * ii.unitPrice) AS totalRevenue
+        SUM(
+          CASE
+            WHEN inv.subtotal > 0
+            THEN (ii.quantity * ii.unitPrice / inv.subtotal) * inv.total
+            ELSE ii.quantity * ii.unitPrice
+          END
+        ) AS totalRevenue
       FROM InvoiceItem ii
       LEFT JOIN Service s ON ii.serviceId = s.id
       INNER JOIN Invoice inv ON ii.invoiceId = inv.id

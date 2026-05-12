@@ -50,7 +50,26 @@ const InvoicesTable = nextDynamic(() => import('@/components/invoices/InvoicesTa
 });
 
 type InvoiceDashboardRow = Prisma.InvoiceGetPayload<{
-  include: { client: true; receipt: true; items: true };
+  select: {
+    id: true;
+    invoiceNumber: true;
+    subtotal: true;
+    discount: true;
+    tax: true;
+    total: true;
+    totalAmount: true;
+    depositAmount: true;
+    amountDue: true;
+    paymentStatus: true;
+    status: true;
+    issueDate: true;
+    dueDate: true;
+    paymentTerms: true;
+    notes: true;
+    client: { select: { name: true; company: true; address: true; email: true } };
+    receipt: { select: { id: true } };
+    items: { select: { id: true; description: true; quantity: true; unitPrice: true } };
+  };
 }>;
 
 const safeNumber = (value: unknown) => {
@@ -97,10 +116,25 @@ function mapInvoicesForTable(invoices: InvoiceDashboardRow[]): InvoiceSummary[] 
   }));
 }
 
-const invoiceDashboardInclude = {
-  client: true,
-  receipt: true,
-  items: true,
+const invoiceDashboardSelect = {
+  id: true,
+  invoiceNumber: true,
+  subtotal: true,
+  discount: true,
+  tax: true,
+  total: true,
+  totalAmount: true,
+  depositAmount: true,
+  amountDue: true,
+  paymentStatus: true,
+  status: true,
+  issueDate: true,
+  dueDate: true,
+  paymentTerms: true,
+  notes: true,
+  client: { select: { name: true, company: true, address: true, email: true } },
+  receipt: { select: { id: true } },
+  items: { select: { id: true, description: true, quantity: true, unitPrice: true } },
 } as const;
 
 export default async function Home({ searchParams }: PageProps) {
@@ -118,28 +152,38 @@ export default async function Home({ searchParams }: PageProps) {
 
   const sp = (await searchParams) ?? {};
   const rawDate = sp.date;
-  if (rawDate && !parseLocalDayBounds(rawDate)) {
+  const parsedDayBounds = rawDate ? parseLocalDayBounds(rawDate) : null;
+  if (rawDate && !parsedDayBounds) {
     redirect('/');
   }
 
-  const dayScope = Boolean(rawDate && parseLocalDayBounds(rawDate));
-  const bounds = dayScope ? parseLocalDayBounds(rawDate!)! : null;
+  const dayScope = Boolean(parsedDayBounds);
+  const bounds = parsedDayBounds;
   const issueDay = bounds ? { gte: bounds.start, lt: bounds.end } : undefined;
 
+  const localDateString = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
   if (dayScope && bounds) {
-    const [dayMetrics, initialTopSelling, dashboardAlerts, invoices, invoiceTotalCardData] =
+    const dismissedDate = localDateString(bounds.start);
+    const [dayMetrics, initialTopSelling, dismissedRows, invoices, invoiceTotalCardData] =
       await Promise.all([
         getFinanceDayMetrics(prisma, bounds),
         getTopSellingProducts(prisma, { sort: 'revenue', limit: 10, issueDay: bounds }),
-        buildDashboardAlerts(prisma, { dayBounds: bounds }),
+        prisma.dismissedAlert.findMany({
+          where: { userId: session.sub, dismissedDate },
+          select: { alertId: true },
+        }),
         prisma.invoice.findMany({
           where: { issueDate: issueDay },
           orderBy: { createdAt: 'desc' },
           take: DASHBOARD_HOME_INVOICE_LIMIT,
-          include: invoiceDashboardInclude,
+          select: invoiceDashboardSelect,
         }),
         getInvoiceTotalCardData(prisma),
       ]);
+    const dismissedIds = new Set(dismissedRows.map((r) => r.alertId));
+    const dashboardAlerts = await buildDashboardAlerts(prisma, { dayBounds: bounds, dismissedAlertIds: dismissedIds });
 
     const invoicesForClient = mapInvoicesForTable(invoices);
     const dm = dayMetrics;
@@ -255,18 +299,24 @@ export default async function Home({ searchParams }: PageProps) {
     );
   }
 
-  const [summary, initialTopSelling, dashboardAlerts, invoices, invoiceTotalCardData] =
+  const todayStr = localDateString(new Date());
+  const [summary, initialTopSelling, dismissedRowsDefault, invoices, invoiceTotalCardData] =
     await Promise.all([
       getFinanceSummaryMetrics(prisma),
       getTopSellingProducts(prisma, { sort: 'revenue', limit: 10 }),
-      buildDashboardAlerts(prisma),
+      prisma.dismissedAlert.findMany({
+        where: { userId: session.sub, dismissedDate: todayStr },
+        select: { alertId: true },
+      }),
       prisma.invoice.findMany({
         orderBy: { createdAt: 'desc' },
         take: DASHBOARD_HOME_INVOICE_LIMIT,
-        include: invoiceDashboardInclude,
+        select: invoiceDashboardSelect,
       }),
       getInvoiceTotalCardData(prisma),
     ]);
+  const dismissedIdsDefault = new Set(dismissedRowsDefault.map((r) => r.alertId));
+  const dashboardAlerts = await buildDashboardAlerts(prisma, { dismissedAlertIds: dismissedIdsDefault });
 
   const invoicesForClient = mapInvoicesForTable(invoices);
   const sm = summary;

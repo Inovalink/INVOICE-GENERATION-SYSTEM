@@ -5,6 +5,7 @@ import { getFinanceSummaryMetrics } from '@/lib/financeSummaryMetrics';
 import { getInvoiceTotalCardData } from '@/lib/invoiceTotalSeries';
 import { getTopSellingProducts } from '@/lib/topSellingProducts';
 import { buildDashboardAlerts } from '@/lib/dashboardAlerts';
+import { getSessionClaims } from '@/lib/auth/getCurrentUser';
 import MetricSummaryCard from '@/components/dashboard/MetricSummaryCard';
 import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
 import RevenueTrendsSection from '@/components/finance/RevenueTrendsSection';
@@ -23,13 +24,25 @@ const safeNumber = (value: unknown) => {
 
 export const dynamic = 'force-dynamic';
 
+function localDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export default async function FinancePage() {
-  const [financeMetrics, invoiceTotalCardData, initialTopSelling, dashboardAlerts, invoices] =
+  const session = await getSessionClaims();
+  const todayStr = localDateString(new Date());
+
+  const [financeMetrics, invoiceTotalCardData, initialTopSelling, dismissedRows, invoices] =
     await Promise.all([
       getFinanceSummaryMetrics(prisma),
       getInvoiceTotalCardData(prisma),
       getTopSellingProducts(prisma, { sort: 'revenue', limit: 10 }),
-      buildDashboardAlerts(prisma),
+      session
+        ? prisma.dismissedAlert.findMany({
+            where: { userId: session.sub, dismissedDate: todayStr },
+            select: { alertId: true },
+          })
+        : Promise.resolve([]),
       prisma.invoice.findMany({
         orderBy: { createdAt: 'desc' },
         include: {
@@ -39,6 +52,9 @@ export default async function FinancePage() {
         },
       }),
     ]);
+
+  const dismissedIds = new Set(dismissedRows.map((r) => r.alertId));
+  const dashboardAlerts = await buildDashboardAlerts(prisma, { dismissedAlertIds: dismissedIds });
 
   const invoicesForClient: InvoiceSummary[] = invoices.map((inv) => ({
     id: inv.id,

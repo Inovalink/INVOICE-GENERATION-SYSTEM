@@ -13,8 +13,31 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const year = parseInt(searchParams.get('year') ?? '', 10);
-    const month = parseInt(searchParams.get('month') ?? '', 10);
+    const yearStr  = searchParams.get('year');
+    const monthStr = searchParams.get('month');
+
+    const formatTask = (t: { id: string; title: string; notes: string | null; dueDate: Date; priority: TaskPriority; completed: boolean; createdAt: Date }) => ({
+      id: t.id,
+      title: t.title,
+      notes: t.notes,
+      dueDate: t.dueDate.toISOString(),
+      priority: t.priority,
+      completed: t.completed,
+      createdAt: t.createdAt.toISOString(),
+    });
+
+    // No date filters → return all tasks (for Kanban view)
+    if (!yearStr || !monthStr) {
+      const tasks = await prisma.task.findMany({
+        where: { userId },
+        orderBy: [{ completed: 'asc' }, { priority: 'desc' }, { dueDate: 'asc' }],
+        take: 1000,
+      });
+      return NextResponse.json(tasks.map(formatTask));
+    }
+
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
     if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
       return NextResponse.json({ message: 'Invalid year/month' }, { status: 400 });
     }
@@ -31,17 +54,7 @@ export async function GET(request: Request) {
       orderBy: [{ dueDate: 'asc' }, { createdAt: 'asc' }],
     });
 
-    return NextResponse.json(
-      tasks.map((t) => ({
-        id: t.id,
-        title: t.title,
-        notes: t.notes,
-        dueDate: t.dueDate.toISOString(),
-        priority: t.priority,
-        completed: t.completed,
-        createdAt: t.createdAt.toISOString(),
-      })),
-    );
+    return NextResponse.json(tasks.map(formatTask));
   } catch (e) {
     console.error(e);
     return NextResponse.json({ message: 'Failed to load tasks' }, { status: 500 });
@@ -67,14 +80,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Title is required' }, { status: 400 });
     }
 
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dueDateStr);
-    if (!m) {
-      return NextResponse.json({ message: 'Invalid dueDate (use YYYY-MM-DD)' }, { status: 400 });
+    const dtMatch = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(dueDateStr);
+    const dMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dueDateStr);
+    let dueDate: Date;
+    if (dtMatch) {
+      const [, yr, mo, dy, hr, mn] = dtMatch.map(Number);
+      dueDate = new Date(yr, mo - 1, dy, hr, mn, 0, 0);
+    } else if (dMatch) {
+      const [, yr, mo, dy] = dMatch.map(Number);
+      dueDate = new Date(yr, mo - 1, dy, 12, 0, 0, 0);
+    } else {
+      return NextResponse.json({ message: 'Invalid dueDate (use YYYY-MM-DD or YYYY-MM-DDTHH:mm)' }, { status: 400 });
     }
-    const y = parseInt(m[1], 10);
-    const mo = parseInt(m[2], 10) - 1;
-    const d = parseInt(m[3], 10);
-    const dueDate = new Date(y, mo, d, 12, 0, 0, 0);
 
     const task = await prisma.task.create({
       data: {

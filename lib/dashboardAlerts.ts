@@ -1,6 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
 import {
-  isInvoiceOverdue,
   isInvoiceOverdueAsOf,
   overdueRiskFromDaysOverdue,
   type OverdueRiskLevel,
@@ -11,7 +10,7 @@ export type DashboardAlertIconVariant = 'bill' | 'chart' | 'card' | 'coin' | 'fl
 
 export type DashboardAlertRow = {
   id: string;
-  kind: 'upcoming' | 'overdue' | 'payment' | 'system' | 'receipt' | 'revenue';
+  kind: 'upcoming' | 'overdue' | 'payment' | 'system' | 'receipt' | 'revenue' | 'error';
   title: string;
   description: string;
   /** Sort / tab filter timestamp (ISO). */
@@ -39,13 +38,12 @@ function daysUntilDue(dueDate: Date, now: Date): number {
 
 export async function buildDashboardAlerts(
   prisma: PrismaClient,
-  options?: { dayBounds: { start: Date; end: Date } },
+  options?: { dayBounds?: { start: Date; end: Date }; dismissedAlertIds?: Set<string> },
 ): Promise<DashboardAlertRow[]> {
-  const day = options?.dayBounds;
   const now = new Date();
   const startToday = startOfLocalDay(now);
-  const futureLimit = new Date(now);
-  futureLimit.setDate(futureLimit.getDate() + 21);
+  const endToday = new Date(startToday.getTime() + 24 * 60 * 60 * 1000);
+  const day = options?.dayBounds ?? { start: startToday, end: endToday };
 
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -57,6 +55,8 @@ export async function buildDashboardAlerts(
     recentPayments,
     recentInvoices,
     recentReceipts,
+    recentlyPaidInvoices,
+    invoiceAuditRows,
     thisMonthPay,
     lastMonthPay,
   ] = await Promise.all([
@@ -64,9 +64,7 @@ export async function buildDashboardAlerts(
       where: {
         status: { notIn: ['PAID', 'CANCELLED'] },
         amountDue: { gt: 0 },
-        dueDate: day
-          ? { gte: day.start, lt: day.end }
-          : { gte: startToday, lte: futureLimit },
+        dueDate: { gte: day.start, lt: day.end },
       },
       include: { client: true },
       orderBy: { dueDate: 'asc' },
@@ -80,24 +78,50 @@ export async function buildDashboardAlerts(
       include: { client: true },
     }),
     prisma.payment.findMany({
-      where: day ? { paymentDate: { gte: day.start, lt: day.end } } : undefined,
+      where: { paymentDate: { gte: day.start, lt: day.end } },
       orderBy: { paymentDate: 'desc' },
-      take: day ? 50 : 25,
+      take: 50,
       include: {
         invoice: { include: { client: true } },
       },
     }),
     prisma.invoice.findMany({
-      where: day ? { createdAt: { gte: day.start, lt: day.end } } : undefined,
+      where: { createdAt: { gte: day.start, lt: day.end } },
       orderBy: { createdAt: 'desc' },
-      take: day ? 20 : 8,
+      take: 20,
       include: { client: true },
     }),
     prisma.receipt.findMany({
-      where: day ? { createdAt: { gte: day.start, lt: day.end } } : undefined,
+      where: { createdAt: { gte: day.start, lt: day.end } },
       orderBy: { createdAt: 'desc' },
-      take: day ? 15 : 5,
+      take: 15,
       include: { invoice: true },
+    }),
+    prisma.invoice.findMany({
+      where: { status: 'PAID', updatedAt: { gte: day.start, lt: day.end } },
+      orderBy: { updatedAt: 'desc' },
+      take: 15,
+      select: {
+        id: true,
+        invoiceNumber: true,
+        total: true,
+        updatedAt: true,
+        client: { select: { name: true } },
+      },
+    }),
+    prisma.invoice.findMany({
+      where: { updatedAt: { gte: day.start, lt: day.end } },
+      orderBy: { updatedAt: 'desc' },
+      take: 20,
+      select: {
+        id: true,
+        invoiceNumber: true,
+        status: true,
+        amountDue: true,
+        createdAt: true,
+        updatedAt: true,
+        client: { select: { name: true } },
+      },
     }),
     prisma.payment.aggregate({
       where: { paymentDate: { gte: thisMonthStart, lt: nextMonthStart } },
@@ -110,26 +134,17 @@ export async function buildDashboardAlerts(
   ]);
 
   const overdueRows = openInvoicesForOverdue.filter((inv) =>
-    day
-      ? isInvoiceOverdueAsOf(
-          {
-            status: inv.status,
-            paymentStatus: inv.paymentStatus,
-            dueDate: inv.dueDate,
-            amountDue: inv.amountDue,
-            total: inv.total,
-            depositAmount: inv.depositAmount,
-          },
-          day.start,
-        )
-      : isInvoiceOverdue({
-          status: inv.status,
-          paymentStatus: inv.paymentStatus,
-          dueDate: inv.dueDate,
-          amountDue: inv.amountDue,
-          total: inv.total,
-          depositAmount: inv.depositAmount,
-        }),
+    isInvoiceOverdueAsOf(
+      {
+        status: inv.status,
+        paymentStatus: inv.paymentStatus,
+        dueDate: inv.dueDate,
+        amountDue: inv.amountDue,
+        total: inv.total,
+        depositAmount: inv.depositAmount,
+      },
+      day.start,
+    ),
   );
 
   const alerts: DashboardAlertRow[] = [];
@@ -137,30 +152,21 @@ export async function buildDashboardAlerts(
   const ms24h = 24 * 60 * 60 * 1000;
   const isUnread = (d: Date) => Date.now() - d.getTime() < ms24h;
 
-  const refNow = day ? day.start : now;
+  const refNow = day.start;
 
   for (const inv of upcomingRows) {
     if (!inv.dueDate) continue;
-    const overdueCheck = day
-      ? isInvoiceOverdueAsOf(
-          {
-            status: inv.status,
-            paymentStatus: inv.paymentStatus,
-            dueDate: inv.dueDate,
-            amountDue: inv.amountDue,
-            total: inv.total,
-            depositAmount: inv.depositAmount,
-          },
-          day.start,
-        )
-      : isInvoiceOverdue({
-          status: inv.status,
-          paymentStatus: inv.paymentStatus,
-          dueDate: inv.dueDate,
-          amountDue: inv.amountDue,
-          total: inv.total,
-          depositAmount: inv.depositAmount,
-        });
+    const overdueCheck = isInvoiceOverdueAsOf(
+      {
+        status: inv.status,
+        paymentStatus: inv.paymentStatus,
+        dueDate: inv.dueDate,
+        amountDue: inv.amountDue,
+        total: inv.total,
+        depositAmount: inv.depositAmount,
+      },
+      day.start,
+    );
     if (overdueCheck) {
       continue;
     }
@@ -179,7 +185,6 @@ export async function buildDashboardAlerts(
   }
 
   for (const inv of overdueRows) {
-    const due = inv.dueDate ?? inv.issueDate;
     const amt = Math.max(0, inv.amountDue ?? 0);
     const daysLate = inv.dueDate
       ? Math.max(
@@ -220,6 +225,19 @@ export async function buildDashboardAlerts(
     });
   }
 
+  for (const inv of recentlyPaidInvoices) {
+    alerts.push({
+      id: `paid-${inv.id}`,
+      kind: 'payment',
+      title: 'Invoice paid',
+      description: `${inv.client.name} fully paid Invoice #${inv.invoiceNumber} (${formatGhs(inv.total)}).`,
+      at: inv.updatedAt.toISOString(),
+      unread: isUnread(inv.updatedAt),
+      iconVariant: 'card',
+      href: `/invoices/${inv.id}`,
+    });
+  }
+
   for (const inv of recentInvoices) {
     alerts.push({
       id: `sys-inv-${inv.id}`,
@@ -246,43 +264,61 @@ export async function buildDashboardAlerts(
     });
   }
 
-  if (!day) {
-    const cur = thisMonthPay._sum.amount ?? 0;
-    const prev = lastMonthPay._sum.amount ?? 0;
-    if (prev > 0 && cur < prev) {
-      const drop = Math.round(((prev - cur) / prev) * 100);
-      if (drop >= 5) {
-        alerts.push({
-          id: 'revenue-mom-down',
-          kind: 'revenue',
-          title: 'Revenue trend',
-          description: `Collections this month are about ${drop}% lower than last month (${formatGhs(cur)} vs ${formatGhs(prev)}).`,
-          at: now.toISOString(),
-          unread: true,
-          iconVariant: 'chart',
-          href: null,
-          revenueTrend: 'down',
-        });
-      }
-    } else if (prev > 0 && cur > prev) {
-      const rise = Math.round(((cur - prev) / prev) * 100);
-      if (rise >= 5) {
-        alerts.push({
-          id: 'revenue-mom-up',
-          kind: 'revenue',
-          title: 'Revenue trend',
-          description: `Collections this month are about ${rise}% higher than last month (${formatGhs(cur)} vs ${formatGhs(prev)}).`,
-          at: now.toISOString(),
-          unread: true,
-          iconVariant: 'chart',
-          href: null,
-          revenueTrend: 'up',
-        });
-      }
+  for (const inv of invoiceAuditRows) {
+    if (inv.updatedAt.getTime() - inv.createdAt.getTime() < 1000) {
+      continue;
+    }
+    alerts.push({
+      id: `audit-${inv.id}-${inv.updatedAt.getTime()}`,
+      kind: 'system',
+      title: 'Audit trail',
+      description: `Invoice #${inv.invoiceNumber} (${inv.client.name}) updated to ${inv.status.replace(/_/g, ' ').toLowerCase()}${inv.amountDue > 0 ? ` with ${formatGhs(inv.amountDue)} due` : ''}.`,
+      at: inv.updatedAt.toISOString(),
+      unread: isUnread(inv.updatedAt),
+      iconVariant: 'shield',
+      href: `/invoices/${inv.id}`,
+    });
+  }
+
+  const cur = thisMonthPay._sum.amount ?? 0;
+  const prev = lastMonthPay._sum.amount ?? 0;
+  if (prev > 0 && cur < prev) {
+    const drop = Math.round(((prev - cur) / prev) * 100);
+    if (drop >= 5) {
+      alerts.push({
+        id: 'revenue-mom-down',
+        kind: 'revenue',
+        title: 'Revenue trend',
+        description: `Collections this month are about ${drop}% lower than last month (${formatGhs(cur)} vs ${formatGhs(prev)}).`,
+        at: now.toISOString(),
+        unread: true,
+        iconVariant: 'chart',
+        href: null,
+        revenueTrend: 'down',
+      });
+    }
+  } else if (prev > 0 && cur > prev) {
+    const rise = Math.round(((cur - prev) / prev) * 100);
+    if (rise >= 5) {
+      alerts.push({
+        id: 'revenue-mom-up',
+        kind: 'revenue',
+        title: 'Revenue trend',
+        description: `Collections this month are about ${rise}% higher than last month (${formatGhs(cur)} vs ${formatGhs(prev)}).`,
+        at: now.toISOString(),
+        unread: true,
+        iconVariant: 'chart',
+        href: null,
+        revenueTrend: 'up',
+      });
     }
   }
 
   alerts.sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+
+  if (options?.dismissedAlertIds?.size) {
+    return alerts.filter((a) => !options.dismissedAlertIds!.has(a.id));
+  }
 
   return alerts;
 }

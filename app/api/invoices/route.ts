@@ -5,6 +5,48 @@ import { indexInvoiceById } from '@/lib/search/invoiceSearch';
 
 const prisma = new PrismaClient();
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const clientId = searchParams.get('clientId');
+
+    const ctx = await getCurrentContext();
+    const defaultUser = ctx?.user ?? (await prisma.user.findFirst());
+    if (!defaultUser) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+
+    const invoices = await prisma.invoice.findMany({
+      where: {
+        userId: defaultUser.id,
+        ...(clientId ? { clientId } : {}),
+      },
+      select: {
+        id: true,
+        invoiceNumber: true,
+        status: true,
+        total: true,
+        dueDate: true,
+        client: { select: { name: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return NextResponse.json(
+      invoices.map((inv) => ({
+        id: inv.id,
+        invoiceNumber: inv.invoiceNumber,
+        status: inv.status,
+        total: inv.total,
+        dueDate: inv.dueDate?.toISOString() ?? null,
+        clientName: inv.client.name,
+      })),
+    );
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json({ message: 'Failed to load invoices' }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();

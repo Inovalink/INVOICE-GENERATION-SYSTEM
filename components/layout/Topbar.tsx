@@ -3,7 +3,23 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Bell, ChevronDown, MoonStar, SunMedium, MessageCircle, PanelLeft } from 'lucide-react';
+import {
+  Search,
+  Bell,
+  ChevronDown,
+  MoonStar,
+  SunMedium,
+  MessageCircle,
+  PanelLeft,
+  FileText,
+  User,
+  Package,
+  CheckSquare,
+  Banknote,
+  Receipt,
+  CalendarDays,
+  ArrowRight,
+} from 'lucide-react';
 import { formatUserDisplayName } from '@/lib/formatUserDisplayName';
 import {
   applyTheme,
@@ -28,6 +44,21 @@ type GlobalSuggestion = {
   href: string;
   badge?: string;
 };
+
+function KindIcon({ kind }: { kind: GlobalSuggestion['kind'] }) {
+  const p = { size: 13, strokeWidth: 2.1, 'aria-hidden': true as const };
+  switch (kind) {
+    case 'invoice':  return <FileText {...p} />;
+    case 'payment':  return <Banknote {...p} />;
+    case 'receipt':  return <Receipt {...p} />;
+    case 'client':   return <User {...p} />;
+    case 'service':  return <Package {...p} />;
+    case 'task':     return <CheckSquare {...p} />;
+    case 'date':
+    case 'period':   return <CalendarDays {...p} />;
+    default:         return <Search {...p} />;
+  }
+}
 
 function initialsForUser(user: { firstName: string; lastName: string; email: string }): string {
   const f = user.firstName.trim();
@@ -78,6 +109,7 @@ export default function Topbar({
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState<GlobalSuggestion[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestExpanded, setSuggestExpanded] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const financialNotify = useFinancialAlertNotificationsSafe();
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
@@ -139,13 +171,15 @@ export default function Topbar({
       setSuggestions([]);
       setSearchLoading(false);
       setSuggestOpen(false);
+      setSuggestExpanded(false);
       return;
     }
+    setSuggestExpanded(false);
     setSearchLoading(true);
     setSuggestOpen(true);
     const t = window.setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(q)}&limit=10`);
+        const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(q)}&limit=20`);
         if (!res.ok) throw new Error('Suggestion request failed');
         const body = (await res.json()) as { suggestions?: GlobalSuggestion[] };
         setSuggestions(Array.isArray(body.suggestions) ? body.suggestions : []);
@@ -253,35 +287,63 @@ export default function Topbar({
               <div className="search-suggest__state">Searching...</div>
             ) : suggestions.length === 0 ? (
               <div className="search-suggest__state">No matches yet.</div>
-            ) : (
-              <>
-                {suggestions.map((s) => (
+            ) : (() => {
+              const VISIBLE = 7;
+              const visible = suggestExpanded ? suggestions : suggestions.slice(0, VISIBLE);
+              const hiddenCount = Math.max(0, suggestions.length - VISIBLE);
+              return (
+                <>
+                  {visible.map((s) => (
+                    <button
+                      type="button"
+                      key={s.id}
+                      className={`search-suggest__item search-suggest__item--${s.kind}`}
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setSuggestOpen(false);
+                        setSearchTerm(s.label);
+                        router.push(s.href);
+                      }}
+                    >
+                      <span className="search-suggest__kind-icon">
+                        <KindIcon kind={s.kind} />
+                      </span>
+                      <span className="search-suggest__body">
+                        <span className="search-suggest__label">{s.label}</span>
+                        {s.subLabel ? (
+                          <span className="search-suggest__sub">{s.subLabel}</span>
+                        ) : null}
+                      </span>
+                      {s.badge ? (
+                        <span className={`search-suggest__badge${s.kind !== 'invoice' && s.kind !== 'service' && s.kind !== 'payment' && s.kind !== 'receipt' ? ' search-suggest__badge--entity' : ''}`}>
+                          {s.badge}
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                  {!suggestExpanded && hiddenCount > 0 ? (
+                    <button
+                      type="button"
+                      className="search-suggest__more"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setSuggestExpanded(true)}
+                    >
+                      <ChevronDown size={12} strokeWidth={2.5} aria-hidden />
+                      Show {hiddenCount} more result{hiddenCount === 1 ? '' : 's'}
+                    </button>
+                  ) : null}
                   <button
                     type="button"
-                    key={s.id}
-                    className="search-suggest__item"
+                    className="search-suggest__all"
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => {
-                      setSuggestOpen(false);
-                      setSearchTerm(s.label);
-                      router.push(s.href);
-                    }}
+                    onClick={submitSearch}
                   >
-                    <span className="search-suggest__inv">{s.label}</span>
-                    <span className="search-suggest__client">{s.subLabel ?? ''}</span>
-                    <span className="search-suggest__amt">{s.badge ?? ''}</span>
+                    <ArrowRight size={12} strokeWidth={2.5} aria-hidden />
+                    View all results for &ldquo;{searchTerm.trim()}&rdquo;
                   </button>
-                ))}
-                <button
-                  type="button"
-                  className="search-suggest__all"
-                  onMouseDown={(e) => e.preventDefault()}
-                  onClick={submitSearch}
-                >
-                  View all results for "{searchTerm.trim()}"
-                </button>
-              </>
-            )}
+                </>
+              );
+            })()}
           </div>
         )}
         </div>

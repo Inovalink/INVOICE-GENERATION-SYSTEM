@@ -4,6 +4,25 @@ import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
 import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
 
+function localDateString(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+async function autoDismissInvoiceAlerts(prisma: PrismaClient, invoiceId: string): Promise<void> {
+  const userId = await getDefaultUserId();
+  if (!userId) return;
+  const dismissedDate = localDateString(new Date());
+  await Promise.all(
+    [`overdue-${invoiceId}`, `upcoming-${invoiceId}`].map((alertId) =>
+      prisma.dismissedAlert.upsert({
+        where: { userId_alertId_dismissedDate: { userId, alertId, dismissedDate } },
+        update: {},
+        create: { userId, alertId, dismissedDate },
+      }),
+    ),
+  );
+}
+
 const prisma = new PrismaClient();
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -130,7 +149,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
             : invoice.dueDate,
       },
     });
-    await indexInvoiceById(invoiceId);
+    await Promise.all([
+      indexInvoiceById(invoiceId),
+      autoDismissInvoiceAlerts(prisma, invoiceId),
+    ]);
 
     // For partial payments, go back to invoices list.
     if (nextDue > 0) {

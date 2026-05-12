@@ -2,7 +2,6 @@
 
 import { Fragment, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
@@ -37,17 +36,6 @@ const INVALID_BUSINESS_EMAIL_ERROR = 'Please enter a valid business email addres
 
 export default function SignupWizard() {
   const router = useRouter();
-  const heroSlides = [
-    '/Login_Forms/LF_1.jpg',
-    '/Login_Forms/LF_2.jpg',
-    '/Login_Forms/LF_3.jpg',
-    '/Login_Forms/LF_4.jpg',
-    '/Login_Forms/LF_5.jpg',
-    '/Login_Forms/LF_6.jpg',
-    '/Login_Forms/LF_7.jpg',
-    '/Login_Forms/LF_8.jpg',
-  ] as const;
-  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [step, setStep] = useState(1);
   const [accountType, setAccountType] = useState<Account | null>(null);
   const [firstName, setFirstName] = useState('');
@@ -251,14 +239,7 @@ export default function SignupWizard() {
     };
   }, [otpSuccessToastLeaving]);
 
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setHeroSlideIndex((prev) => (prev + 1) % heroSlides.length);
-    }, 4800);
-    return () => window.clearInterval(id);
-  }, [heroSlides.length]);
-
-  async function requestEmailOtp(): Promise<boolean> {
+async function requestEmailOtp(): Promise<boolean> {
     setOtpSending(true);
     try {
       const res = await fetch('/api/auth/signup/send-otp', {
@@ -472,17 +453,6 @@ export default function SignupWizard() {
     <div className="auth-split">
       <aside className="auth-split__hero" aria-hidden>
         <div className="auth-split__hero-media">
-          {heroSlides.map((src, index) => (
-            <Image
-              key={src}
-              src={src}
-              alt=""
-              fill
-              sizes="(max-width: 960px) 100vw, 40vw"
-              className={`auth-split__hero-slide ${index === heroSlideIndex ? 'is-active' : ''}`}
-              priority={index === 0}
-            />
-          ))}
           <div className="auth-split__hero-media-overlay" />
         </div>
         <div className="auth-split__hero-inner">
@@ -570,21 +540,6 @@ export default function SignupWizard() {
                 </div>
               </li>
             </ul>
-          </div>
-          <div className="auth-split__hero-controls">
-            <div className="auth-split__hero-dots" role="tablist" aria-label="Hero image slides">
-              {heroSlides.map((src, index) => (
-                <button
-                  key={`dot-${src}`}
-                  type="button"
-                  className={`auth-split__hero-dot ${index === heroSlideIndex ? 'is-active' : ''}`}
-                  onClick={() => setHeroSlideIndex(index)}
-                  aria-label={`Show image ${index + 1}`}
-                  aria-selected={index === heroSlideIndex}
-                  role="tab"
-                />
-              ))}
-            </div>
           </div>
         </div>
       </aside>

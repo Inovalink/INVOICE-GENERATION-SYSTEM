@@ -310,7 +310,9 @@ export default function TopSellingProductsCard({
     }));
   }, [products, sort]);
 
-  const centerSub = sort === 'revenue' ? 'Total revenue' : 'Total quantity';
+  const centerSub = sort === 'revenue'
+    ? `Top ${limit} revenue`
+    : `Top ${limit} quantity`;
   const sortLabel = sort === 'revenue' ? 'Revenue' : 'Quantity';
   const limitLabel = limit === 10 ? 'Top 10' : 'Top 5';
   const revenueAmountDisplay = useMemo(() => {

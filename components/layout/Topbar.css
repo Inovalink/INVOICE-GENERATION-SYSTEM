@@ -91,76 +91,185 @@
 
 .search-suggest {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 7px);
   left: 0;
   right: 0;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
-  box-shadow: var(--shadow-md);
+  border-radius: 16px;
+  box-shadow:
+    0 4px 6px -2px rgb(0 0 0 / 0.05),
+    0 20px 40px -8px rgb(0 0 0 / 0.13);
   z-index: 110;
   overflow: hidden;
+  max-height: 480px;
+  overflow-y: auto;
+  padding: 0.3rem 0;
 }
 
 .search-suggest__state {
-  padding: 0.8rem 0.9rem;
-  font-size: 0.75rem;
+  padding: 1rem 1rem;
+  font-size: 0.775rem;
   color: var(--text-secondary);
+  text-align: center;
+}
+
+.search-suggest__section {
+  padding: 0.5rem 1rem 0.3rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  user-select: none;
 }
 
 .search-suggest__item {
   width: 100%;
   border: none;
   background: transparent;
-  border-bottom: 1px solid var(--border-color);
-  padding: 0.58rem 0.78rem;
+  padding: 0.52rem 0.85rem;
   display: grid;
-  grid-template-columns: minmax(110px, auto) minmax(0, 1fr) auto;
-  gap: 0.5rem;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 0.6rem;
   align-items: center;
   text-align: left;
   cursor: pointer;
+  transition: background 0.1s ease;
 }
 
-.search-suggest__item:hover {
-  background: var(--bg-primary);
+.search-suggest__item:hover,
+.search-suggest__item.is-active {
+  background: color-mix(in srgb, var(--bg-primary) 80%, transparent);
 }
 
-.search-suggest__inv {
-  font-size: 0.73rem;
-  font-weight: 700;
+.search-suggest__item.is-active {
+  outline: none;
+  background: color-mix(in srgb, var(--accent-primary) 8%, transparent);
+}
+
+/* Kind icon — rounded pill with a tinted background */
+.search-suggest__kind-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+  color: var(--text-secondary);
+}
+
+.search-suggest__item--invoice .search-suggest__kind-icon {
+  background: color-mix(in srgb, var(--accent-primary) 13%, transparent);
+  color: var(--accent-primary);
+}
+
+.search-suggest__item--payment .search-suggest__kind-icon {
+  background: color-mix(in srgb, #3b82f6 13%, transparent);
+  color: #3b82f6;
+}
+
+.search-suggest__item--receipt .search-suggest__kind-icon {
+  background: color-mix(in srgb, #10b981 13%, transparent);
+  color: #10b981;
+}
+
+.search-suggest__item--client .search-suggest__kind-icon {
+  background: color-mix(in srgb, #9333ea 13%, transparent);
+  color: #9333ea;
+}
+
+.search-suggest__item--service .search-suggest__kind-icon {
+  background: color-mix(in srgb, #f97316 13%, transparent);
+  color: #f97316;
+}
+
+.search-suggest__item--task .search-suggest__kind-icon {
+  background: color-mix(in srgb, #06b6d4 13%, transparent);
+  color: #06b6d4;
+}
+
+.search-suggest__item--date .search-suggest__kind-icon,
+.search-suggest__item--period .search-suggest__kind-icon,
+.search-suggest__item--keyword .search-suggest__kind-icon {
+  background: color-mix(in srgb, var(--accent-primary) 13%, transparent);
+  color: var(--accent-primary);
+}
+
+.search-suggest__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.search-suggest__label {
+  font-size: 0.775rem;
+  font-weight: 600;
   color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
-.search-suggest__client {
-  font-size: 0.73rem;
+.search-suggest__sub {
+  font-size: 0.7rem;
   color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.3;
 }
 
-.search-suggest__amt {
-  font-size: 0.72rem;
+.search-suggest__badge {
+  font-size: 0.65rem;
   font-weight: 600;
+  padding: 0.18rem 0.5rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent-primary) 11%, transparent);
   color: var(--accent-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: 0.01em;
+}
+
+.search-suggest__badge--entity {
+  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+  color: var(--text-secondary);
 }
 
 .search-suggest__all {
   width: 100%;
   border: none;
+  border-top: 1px solid var(--border-color);
   background: transparent;
-  padding: 0.62rem 0.78rem;
+  margin-top: 0.25rem;
+  padding: 0.65rem 1rem;
   text-align: left;
   cursor: pointer;
-  font-size: 0.73rem;
-  color: var(--text-secondary);
+  font-size: 0.745rem;
+  font-weight: 500;
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  transition: background 0.1s ease;
 }
 
-.search-suggest__all:hover {
-  background: var(--bg-primary);
-  color: var(--text-primary);
+.search-suggest__all:hover,
+.search-suggest__all.is-active {
+  background: color-mix(in srgb, var(--accent-primary) 6%, transparent);
+  color: var(--accent-primary);
 }
+
+.dark .search-suggest__item--payment .search-suggest__kind-icon { color: #60a5fa; background: color-mix(in srgb, #60a5fa 13%, transparent); }
+.dark .search-suggest__item--receipt .search-suggest__kind-icon { color: #34d399; background: color-mix(in srgb, #34d399 13%, transparent); }
+.dark .search-suggest__item--client .search-suggest__kind-icon  { color: #c084fc; background: color-mix(in srgb, #c084fc 13%, transparent); }
+.dark .search-suggest__item--service .search-suggest__kind-icon { color: #fb923c; background: color-mix(in srgb, #fb923c 13%, transparent); }
+.dark .search-suggest__item--task .search-suggest__kind-icon    { color: #22d3ee; background: color-mix(in srgb, #22d3ee 13%, transparent); }
 
 .search-bar:focus-within {
   border-color: var(--accent-light-border);

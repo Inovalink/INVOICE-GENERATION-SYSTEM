@@ -8,7 +8,19 @@ import {
   type MoMTrend,
 } from '@/lib/formatGhs';
 
-export type OverdueSourceInvoice = Prisma.InvoiceGetPayload<{ include: { client: true } }>;
+export type OverdueSourceInvoice = Prisma.InvoiceGetPayload<{
+  select: {
+    id: true;
+    invoiceNumber: true;
+    status: true;
+    paymentStatus: true;
+    dueDate: true;
+    amountDue: true;
+    total: true;
+    depositAmount: true;
+    client: { select: { name: true } };
+  };
+}>;
 
 export type FinanceSummaryMetrics = {
   totalRevenueLifetime: number;
@@ -56,7 +68,21 @@ export async function getOverdueSourceRows(prisma: PrismaClient): Promise<Overdu
       status: { in: ['FINAL', 'PARTIALLY_PAID', 'PROFORMA'] },
     },
     orderBy: { dueDate: 'asc' },
-    include: { client: true },
+    select: {
+      id: true,
+      invoiceNumber: true,
+      status: true,
+      paymentStatus: true,
+      dueDate: true,
+      amountDue: true,
+      total: true,
+      depositAmount: true,
+      client: {
+        select: {
+          name: true,
+        },
+      },
+    },
   });
 }
 
@@ -69,7 +95,7 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
   const prevWeekStart = subWeeks(weekStart, 1);
 
   const [
-    paidInvoicesTotalAgg,
+    allTimePaymentsAgg,
     thisMonthPaymentsAgg,
     lastMonthPaymentsAgg,
     outstandingAgg,
@@ -82,9 +108,8 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     marginThisWeek,
     marginLastWeek,
   ] = await Promise.all([
-    prisma.invoice.aggregate({
-      where: { status: 'PAID' },
-      _sum: { total: true },
+    prisma.payment.aggregate({
+      _sum: { amount: true },
     }),
     prisma.payment.aggregate({
       where: {
@@ -113,7 +138,7 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     }),
     getOverdueSourceRows(prisma),
     prisma.invoice.aggregate({
-      where: { status: { notIn: ['PAID', 'CANCELLED'] } },
+      where: { status: { not: 'CANCELLED' } },
       _sum: { total: true },
     }),
     prisma.invoice.aggregate({
@@ -150,7 +175,7 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     }),
   ]);
 
-  const totalRevenueLifetime = paidInvoicesTotalAgg._sum.total ?? 0;
+  const totalRevenueLifetime = allTimePaymentsAgg._sum.amount ?? 0;
   const thisMonthRevenue = thisMonthPaymentsAgg._sum.amount ?? 0;
   const lastMonthRevenue = lastMonthPaymentsAgg._sum.amount ?? 0;
   const revenueMoM = formatRevenueMoM(thisMonthRevenue, lastMonthRevenue);

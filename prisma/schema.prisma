@@ -19,22 +19,23 @@ enum MembershipRole {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  email       String   @unique
+  id          String      @id @default(uuid())
+  email       String      @unique
   password    String
-  firstName   String @default("")
-  lastName    String @default("")
+  firstName   String      @default("")
+  lastName    String      @default("")
   phone       String?
   /// Display name (kept for receipts / legacy: "First Last")
   name        String
   accountType AccountType @default(SOLO)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 
-  memberships WorkspaceMember[]
-  invoices    Invoice[]
-  receipts    Receipt[]
-  tasks       Task[]
+  memberships      WorkspaceMember[]
+  invoices         Invoice[]
+  receipts         Receipt[]
+  tasks            Task[]
+  dismissedAlerts  DismissedAlert[]
 }
 
 model Workspace {
@@ -50,13 +51,13 @@ model Workspace {
 }
 
 model WorkspaceMember {
-  id          String   @id @default(uuid())
+  id          String         @id @default(uuid())
   workspaceId String
-  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace   Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   userId      String
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
   role        MembershipRole @default(STAFF)
-  createdAt   DateTime @default(now())
+  createdAt   DateTime       @default(now())
 
   @@unique([userId, workspaceId])
   @@index([workspaceId])
@@ -76,45 +77,52 @@ model Client {
 }
 
 model Service {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   name        String
   category    String
   description String?
   price       Float
-  isHourly    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isHourly    Boolean       @default(false)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   items       InvoiceItem[]
 }
 
 model Invoice {
-  id             String        @id @default(uuid())
-  invoiceNumber  String        @unique
-  clientId       String
-  client         Client        @relation(fields: [clientId], references: [id])
-  userId         String
-  user           User          @relation(fields: [userId], references: [id])
-  workspaceId    String?
-  workspace      Workspace?    @relation(fields: [workspaceId], references: [id])
-  status         InvoiceStatus @default(PROFORMA)
+  id                   String        @id @default(uuid())
+  invoiceNumber        String        @unique
+  clientId             String
+  client               Client        @relation(fields: [clientId], references: [id])
+  userId               String
+  user                 User          @relation(fields: [userId], references: [id])
+  workspaceId          String?
+  workspace            Workspace?    @relation(fields: [workspaceId], references: [id])
+  status               InvoiceStatus @default(PROFORMA)
   issueDate            DateTime      @default(now())
   dueDate              DateTime?
   expectedDeliveryDate DateTime?
-  subtotal       Float
-  tax            Float         @default(0)
-  discount       Float         @default(0)
-  totalAmount    Float         @default(0)
-  depositAmount  Float         @default(0)
-  amountDue      Float         @default(0)
-  paymentStatus  String        @default("pending")
-  total          Float
-  notes          String?
-  paymentTerms   String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  items          InvoiceItem[]
-  payments       Payment[]
-  receipt        Receipt?
+  subtotal             Float
+  tax                  Float         @default(0)
+  discount             Float         @default(0)
+  totalAmount          Float         @default(0)
+  depositAmount        Float         @default(0)
+  amountDue            Float         @default(0)
+  paymentStatus        String        @default("pending")
+  total                Float
+  notes                String?
+  paymentTerms         String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  items                InvoiceItem[]
+  payments             Payment[]
+  receipt              Receipt?
+
+  @@index([createdAt])
+  @@index([issueDate])
+  @@index([dueDate])
+  @@index([status, dueDate])
+  @@index([status, createdAt])
+  @@index([paymentStatus, dueDate])
 }
 
 enum InvoiceStatus {
@@ -138,15 +146,18 @@ model InvoiceItem {
 }
 
 model Payment {
-  id              String        @id @default(uuid())
-  invoiceId       String
-  invoice         Invoice       @relation(fields: [invoiceId], references: [id])
-  amount          Float
-  paymentDate     DateTime      @default(now())
-  paymentMethod   PaymentMethod
-  transactionRef  String?
-  notes           String?
-  createdAt       DateTime      @default(now())
+  id             String        @id @default(uuid())
+  invoiceId      String
+  invoice        Invoice       @relation(fields: [invoiceId], references: [id])
+  amount         Float
+  paymentDate    DateTime      @default(now())
+  paymentMethod  PaymentMethod
+  transactionRef String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+
+  @@index([paymentDate])
+  @@index([invoiceId])
 }
 
 enum PaymentMethod {
@@ -168,6 +179,9 @@ model Receipt {
   totalAmount   Float
   notes         String?
   createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([issueDate])
 }
 
 model Task {
@@ -178,7 +192,7 @@ model Task {
   notes     String?
   dueDate   DateTime
   priority  TaskPriority @default(NORMAL)
-  completed Boolean    @default(false)
+  completed Boolean      @default(false)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 
@@ -189,4 +203,16 @@ enum TaskPriority {
   NORMAL
   HIGH
   URGENT
+}
+
+model DismissedAlert {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alertId       String
+  dismissedDate String
+  createdAt     DateTime @default(now())
+
+  @@unique([userId, alertId, dismissedDate])
+  @@index([userId, dismissedDate])
 }
