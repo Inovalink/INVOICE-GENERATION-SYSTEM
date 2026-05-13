@@ -239,6 +239,7 @@ export default function SignupWizard() {
     };
   }, [otpSuccessToastLeaving]);
 
+
 async function requestEmailOtp(): Promise<boolean> {
     setOtpSending(true);
     try {
@@ -339,9 +340,12 @@ async function requestEmailOtp(): Promise<boolean> {
         setShowError(true);
         return;
       }
-      const otpSent = await requestEmailOtp();
-      if (!otpSent) return;
+      clearError();
+      setOtpEmail(emailTrimmed);
+      setOtpCode('');
+      setOtpVerifiedFor(null);
       setStep(3);
+      void requestEmailOtp();
       return;
     }
 
