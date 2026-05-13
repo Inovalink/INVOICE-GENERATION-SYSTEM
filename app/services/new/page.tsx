@@ -1,7 +1,5 @@
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 async function createService(formData: FormData) {
   'use server';

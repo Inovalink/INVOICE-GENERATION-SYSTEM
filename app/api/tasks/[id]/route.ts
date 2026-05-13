@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, type TaskPriority } from '@prisma/client';
+import { type TaskPriority } from '@prisma/client';
 import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

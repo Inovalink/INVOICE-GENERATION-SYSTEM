@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { invoiceDisplayStatus } from '@/lib/invoiceDue';
 import { clampPage } from '@/lib/pagination';
 import PaginationBar from '@/components/ui/PaginationBar';
@@ -27,10 +27,6 @@ export default function DashboardInvoiceList({
 }) {
   const [page, setPage] = useState(1);
   const totalPages = Math.max(1, Math.ceil(invoices.length / PAGE_SIZE));
-
-  useEffect(() => {
-    setPage((p) => Math.min(p, totalPages));
-  }, [invoices.length, totalPages]);
 
   const safePage = clampPage(page, totalPages);
 

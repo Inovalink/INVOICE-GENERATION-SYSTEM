@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, type TaskPriority } from '@prisma/client';
+import { type TaskPriority } from '@prisma/client';
 import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 /** Month 1–12, year full (e.g. 2026). Returns tasks whose dueDate falls in that calendar month. */
 export async function GET(request: Request) {

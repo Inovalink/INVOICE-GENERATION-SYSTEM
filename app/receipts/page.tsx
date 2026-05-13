@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import ReceiptViewButton from '@/components/receipts/ReceiptViewButton';
 import { prisma } from '@/lib/prisma';
 import './receipts.css';
@@ -6,6 +7,8 @@ import './receipts.css';
 export const dynamic = 'force-dynamic';
 
 export default async function ReceiptsPage() {
+  await connection();
+
   const receipts = await prisma.receipt.findMany({
     orderBy: { createdAt: 'desc' },
     select: {

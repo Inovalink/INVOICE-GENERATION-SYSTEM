@@ -1,11 +1,14 @@
 import Link from 'next/link';
-import { PrismaClient } from '@prisma/client';
+import { connection } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import './services.css';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export default async function ServicesPage() {
+  await connection();
+
   const services = await prisma.service.findMany({
     orderBy: { category: 'asc' }
   });

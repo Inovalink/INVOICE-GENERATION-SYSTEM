@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import InvoicesTable, { InvoiceSummary } from '@/components/invoices/InvoicesTable';
 import OverdueInvoicesAlert from '@/components/dashboard/OverdueInvoicesAlert';
 import { isInvoiceOverdue } from '@/lib/invoiceDue';
@@ -32,6 +33,8 @@ function formatRangeLabel(from: Date, to: Date): string {
 }
 
 export default async function InvoicesPage({ searchParams }: PageProps) {
+  await connection();
+
   const sp = (await searchParams) ?? {};
   const fromDate = parseRangeDate(sp.from);
   const toDate = parseRangeDate(sp.to);

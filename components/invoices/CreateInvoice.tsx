@@ -132,7 +132,7 @@ export default function CreateInvoice({
     ]);
   };
 
-  const updateItem = (id: string, field: keyof InvoiceItemState, value: any) => {
+  const updateItem = (id: string, field: keyof InvoiceItemState, value: InvoiceItemState[keyof InvoiceItemState]) => {
     setItems((prev) =>
       prev.map((item) => {
         if (item.id !== id) return item;
@@ -319,21 +319,11 @@ export default function CreateInvoice({
       })
     : 'Upon Receipt';
 
-  const generatedSalesPaymentTerms = useMemo(() => {
-    if (!issueDate || !dueDate) {
-      return 'Set issue date and valid until date to generate payment terms.';
-    }
-    if (calculatedValidityPeriod === 'Invalid range') {
-      return 'Valid until date must be on or after issue date.';
-    }
-    return `Payment for this sales invoice is due within ${calculatedValidityPeriod} (${formattedIssueDate} to ${formattedDueDate}). A 3% penalty fee applies to any outstanding amount after the valid-until date.`;
-  }, [
-    issueDate,
-    dueDate,
-    calculatedValidityPeriod,
-    formattedIssueDate,
-    formattedDueDate,
-  ]);
+  const generatedSalesPaymentTerms = !issueDate || !dueDate
+    ? 'Set issue date and valid until date to generate payment terms.'
+    : calculatedValidityPeriod === 'Invalid range'
+      ? 'Valid until date must be on or after issue date.'
+      : `Payment for this sales invoice is due within ${calculatedValidityPeriod} (${formattedIssueDate} to ${formattedDueDate}). A 3% penalty fee applies to any outstanding amount after the valid-until date.`;
 
   const invoiceTypeLabel: Record<InvoiceType, string> = {
     PROFORMA: 'Proforma Invoice',

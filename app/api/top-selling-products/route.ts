@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import {
   getTopSellingProducts,
   isTopSellingSort,
   type TopSellingLimit,
 } from '@/lib/topSellingProducts';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 function parseLimit(raw: string | null): TopSellingLimit {
   if (raw === '5') return 5;

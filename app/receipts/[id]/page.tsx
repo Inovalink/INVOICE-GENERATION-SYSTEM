@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { getPaymentMethodTitle } from '@/lib/paymentDisplay';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
 import PrintButton from '@/components/invoices/PrintButton';
@@ -8,6 +9,8 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export default async function ReceiptViewPage({ params }: { params: Promise<{ id: string }> }) {
+  await connection();
+
   const resolvedParams = await params;
   const receipt = await prisma.receipt.findUnique({
     where: { id: resolvedParams.id },

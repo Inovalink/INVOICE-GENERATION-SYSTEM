@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, PaymentMethod } from '@prisma/client';
+import { type PrismaClient, PaymentMethod } from '@prisma/client';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
 import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
+import { prisma } from '@/lib/prisma';
 
 function localDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -23,7 +24,7 @@ async function autoDismissInvoiceAlerts(prisma: PrismaClient, invoiceId: string)
   );
 }
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

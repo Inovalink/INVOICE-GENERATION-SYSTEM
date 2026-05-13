@@ -1,11 +1,14 @@
 import Link from 'next/link';
-import { PrismaClient } from '@prisma/client';
+import { connection } from 'next/server';
+import { prisma } from '@/lib/prisma';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 import './clients.css';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export default async function ClientsPage() {
+  await connection();
+
   const clients = await prisma.client.findMany({
     orderBy: { createdAt: 'desc' }
   });

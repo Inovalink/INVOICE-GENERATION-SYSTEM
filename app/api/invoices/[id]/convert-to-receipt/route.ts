@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
 import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

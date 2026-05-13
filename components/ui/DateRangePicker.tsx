@@ -59,6 +59,7 @@ export default function DateRangePicker({
   const panelPortalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

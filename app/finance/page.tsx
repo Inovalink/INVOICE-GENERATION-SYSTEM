@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { Download, Wallet, TrendingUp, Clock, AlertTriangle } from 'lucide-react';
 import { formatGhs } from '@/lib/formatGhs';
 import { getFinanceSummaryMetrics } from '@/lib/financeSummaryMetrics';
@@ -29,6 +30,8 @@ function localDateString(d: Date): string {
 }
 
 export default async function FinancePage() {
+  await connection();
+
   const session = await getSessionClaims();
   const todayStr = localDateString(new Date());
 

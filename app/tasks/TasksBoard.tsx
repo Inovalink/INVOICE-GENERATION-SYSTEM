@@ -417,7 +417,7 @@ export default function TasksBoard({
     const rect = e.currentTarget.getBoundingClientRect();
     const PICKER_W = 196;
     let left = rect.left;
-    let top  = rect.bottom + 10;
+    const top  = rect.bottom + 10;
     if (left + PICKER_W > window.innerWidth - 8) left = window.innerWidth - PICKER_W - 8;
     if (left < 8) left = 8;
     setColorFor(colId);

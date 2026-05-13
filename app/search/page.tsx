@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import {
   ArrowUpRight,
   Banknote,
@@ -82,6 +83,8 @@ function toneForSuggestion(kind: string, subLabel?: string): string {
 }
 
 export default async function SearchPage({ searchParams }: Props) {
+  await connection();
+
   const sp = (await searchParams) ?? {};
   const query = (sp.query ?? '').trim();
   const from = (sp.from ?? '').trim();

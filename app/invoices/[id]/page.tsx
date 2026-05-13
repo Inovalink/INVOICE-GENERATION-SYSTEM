@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { ArrowLeft, Printer, CheckCircle, FileText } from 'lucide-react';
 import PrintButton from '@/components/invoices/PrintButton';
 import ReceiptViewButton from '@/components/receipts/ReceiptViewButton';
@@ -9,6 +10,8 @@ import { prisma } from '@/lib/prisma';
 export const dynamic = 'force-dynamic';
 
 export default async function InvoiceViewPage({ params }: { params: { id: string } }) {
+  await connection();
+
   const invoice = await prisma.invoice.findUnique({
     where: { id: params.id },
     include: {

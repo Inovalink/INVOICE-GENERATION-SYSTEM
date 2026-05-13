@@ -80,13 +80,16 @@ export default function DatePicker({
 
   useEffect(() => {
     if (selected) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setViewYear(selected.getFullYear());
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setViewMonth(selected.getMonth());
     }
   }, [value]);
 
   useLayoutEffect(() => {
     if (!open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAlignRight(false);
       return;
     }

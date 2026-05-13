@@ -1,10 +1,13 @@
 import Link from 'next/link';
+import { connection } from 'next/server';
 import CreateInvoice from '@/components/invoices/CreateInvoice';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export default async function NewInvoicePage() {
+  await connection();
+
   const clients = await prisma.client.findMany({
     select: { id: true, name: true, company: true, email: true, phone: true, address: true },
   });

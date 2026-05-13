@@ -59,7 +59,7 @@ export default function InvoiceForm({
     }
   };
 
-  const updateItem = (id: string, field: keyof InvoiceItemState, value: any) => {
+  const updateItem = (id: string, field: keyof InvoiceItemState, value: InvoiceItemState[keyof InvoiceItemState]) => {
     setItems(items.map(item => {
       if (item.id === id) {
         const updatedItem = { ...item, [field]: value };

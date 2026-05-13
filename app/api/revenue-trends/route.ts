@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import {
   getRevenueTrendSeries,
   getRevenueTrendSeriesEndingOnDay,
   isRevenueGranularity,
 } from '@/lib/revenueTrends';
 import { parseLocalDayBounds } from '@/lib/financeDayBounds';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getCurrentContext } from '@/lib/auth/getCurrentUser';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   try {
@@ -123,7 +123,7 @@ export async function POST(request: Request) {
         notes,
         paymentTerms,
         items: {
-          create: items.map((item: any) => ({
+          create: items.map((item: { serviceId?: string; description: string; quantity: number; unitPrice: number }) => ({
             serviceId: item.serviceId || null,
             description: item.description,
             quantity: item.quantity,

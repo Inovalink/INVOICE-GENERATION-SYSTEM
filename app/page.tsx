@@ -2,6 +2,7 @@ import Link from 'next/link';
 import nextDynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { connection } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { getCurrentContext, getSessionClaims } from '@/lib/auth/getCurrentUser';
 import { Wallet, FileText, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
@@ -138,6 +139,8 @@ const invoiceDashboardSelect = {
 } as const;
 
 export default async function Home({ searchParams }: PageProps) {
+  await connection();
+
   const session = await getSessionClaims();
   if (!session) {
     redirect('/signup');

@@ -242,6 +242,7 @@ export default function InvoicesTable({
   useEffect(() => {
     const receiptIdParam = searchParams.get('receiptId');
     if (!receiptIdParam) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setViewReceiptId(receiptIdParam);
     const nextParams = new URLSearchParams(searchParams.toString());
     nextParams.delete('receiptId');
@@ -275,11 +276,13 @@ export default function InvoicesTable({
 
   useEffect(() => {
     if (!itemsPerPage) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTablePage((p) => Math.min(p, totalTablePages));
   }, [countForPagination, itemsPerPage, totalTablePages]);
 
   useEffect(() => {
     if (!isDashboard) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTablePage(1);
   }, [dashboardFilterStatus, dashboardFilterDateFrom, dashboardFilterDateTo, isDashboard]);
 
