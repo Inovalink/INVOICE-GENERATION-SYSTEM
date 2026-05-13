@@ -12,10 +12,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'Invalid verification request' }, { status: 400 });
   }
 
-  if (!verifyOtp(email, code)) {
+  if (!(await verifyOtp(email, code))) {
     return NextResponse.json({ message: 'Invalid or expired code' }, { status: 400 });
   }
 
-  markSignupEmailVerified(email, 30 * 60 * 1000);
+  await markSignupEmailVerified(email, 30 * 60 * 1000);
   return NextResponse.json({ ok: true });
 }

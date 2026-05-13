@@ -1,37 +1,86 @@
-type Entry = { code: string; exp: number };
+import { prisma } from '@/lib/prisma';
 
-const store = new Map<string, Entry>();
-const verifiedSignup = new Map<string, number>();
-
-export function setOtp(email: string, code: string, ttlMs: number): void {
-  store.set(email.toLowerCase(), { code, exp: Date.now() + ttlMs });
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }
 
-export function verifyOtp(email: string, code: string): boolean {
-  const key = email.toLowerCase();
-  const row = store.get(key);
+const signupOtpVerification = prisma.signupOtpVerification;
+
+export async function setOtp(email: string, code: string, ttlMs: number): Promise<void> {
+  const normalizedEmail = normalizeEmail(email);
+  const expiresAt = new Date(Date.now() + ttlMs);
+
+  await signupOtpVerification.upsert({
+    where: { email: normalizedEmail },
+    update: {
+      code,
+      expiresAt,
+      verifiedUntil: null,
+    },
+    create: {
+      email: normalizedEmail,
+      code,
+      expiresAt,
+      verifiedUntil: null,
+    },
+  });
+}
+
+export async function verifyOtp(email: string, code: string): Promise<boolean> {
+  const normalizedEmail = normalizeEmail(email);
+  const row = await signupOtpVerification.findUnique({
+    where: { email: normalizedEmail },
+    select: { code: true, expiresAt: true },
+  });
+
   if (!row) return false;
-  if (Date.now() > row.exp) {
-    store.delete(key);
+  if (Date.now() > row.expiresAt.getTime()) {
+    await signupOtpVerification.deleteMany({ where: { email: normalizedEmail } });
     return false;
   }
   if (row.code !== code.trim()) return false;
-  store.delete(key);
+
+  await signupOtpVerification.update({
+    where: { email: normalizedEmail },
+    data: {
+      code: '',
+      expiresAt: new Date(),
+    },
+  });
   return true;
 }
 
 /** After OTP succeeds, allow completing signup for this email for a short window. */
-export function markSignupEmailVerified(email: string, ttlMs: number): void {
-  verifiedSignup.set(email.toLowerCase(), Date.now() + ttlMs);
+export async function markSignupEmailVerified(email: string, ttlMs: number): Promise<void> {
+  const normalizedEmail = normalizeEmail(email);
+  const verifiedUntil = new Date(Date.now() + ttlMs);
+
+  await signupOtpVerification.upsert({
+    where: { email: normalizedEmail },
+    update: { verifiedUntil },
+    create: {
+      email: normalizedEmail,
+      code: '',
+      expiresAt: new Date(),
+      verifiedUntil,
+    },
+  });
 }
 
-export function consumeSignupEmailVerification(email: string): boolean {
-  const key = email.toLowerCase();
-  const exp = verifiedSignup.get(key);
-  if (!exp || Date.now() > exp) {
-    verifiedSignup.delete(key);
+export async function consumeSignupEmailVerification(email: string): Promise<boolean> {
+  const normalizedEmail = normalizeEmail(email);
+  const row = await signupOtpVerification.findUnique({
+    where: { email: normalizedEmail },
+    select: { verifiedUntil: true },
+  });
+
+  if (!row?.verifiedUntil || Date.now() > row.verifiedUntil.getTime()) {
+    await signupOtpVerification.deleteMany({ where: { email: normalizedEmail } });
     return false;
   }
-  verifiedSignup.delete(key);
+
+  await signupOtpVerification.delete({
+    where: { email: normalizedEmail },
+  });
   return true;
 }

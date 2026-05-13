@@ -341,11 +341,9 @@ async function requestEmailOtp(): Promise<boolean> {
         return;
       }
       clearError();
-      setOtpEmail(emailTrimmed);
-      setOtpCode('');
-      setOtpVerifiedFor(null);
+      const sent = await requestEmailOtp();
+      if (!sent) return;
       setStep(3);
-      void requestEmailOtp();
       return;
     }
 

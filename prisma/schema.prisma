@@ -216,3 +216,15 @@ model DismissedAlert {
   @@unique([userId, alertId, dismissedDate])
   @@index([userId, dismissedDate])
 }
+
+model SignupOtpVerification {
+  email         String   @id
+  code          String
+  expiresAt     DateTime
+  verifiedUntil DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([expiresAt])
+  @@index([verifiedUntil])
+}

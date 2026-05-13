@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   if (password !== confirmPassword) {
     return NextResponse.json({ message: 'Passwords do not match' }, { status: 400 });
   }
-  if (!consumeSignupEmailVerification(email)) {
+  if (!(await consumeSignupEmailVerification(email))) {
     return NextResponse.json({ message: 'Please verify your email first' }, { status: 400 });
   }
 

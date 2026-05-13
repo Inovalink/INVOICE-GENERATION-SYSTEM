@@ -15,7 +15,6 @@ export async function POST(request: Request) {
   }
 
   const code = randomCode();
-  setOtp(email, code, 15 * 60 * 1000);
 
   try {
     await sendMail({
@@ -23,9 +22,13 @@ export async function POST(request: Request) {
       subject: 'Your Invoice System verification code',
       html: otpEmailTemplate(code),
     });
+    await setOtp(email, code, 15 * 60 * 1000);
   } catch (err) {
     console.error('[send-otp] Failed to send email:', err);
-    return NextResponse.json({ message: 'Failed to send verification email. Please try again.' }, { status: 500 });
+    return NextResponse.json(
+      { message: 'Failed to send verification email. Check mail configuration and try again.' },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true });
