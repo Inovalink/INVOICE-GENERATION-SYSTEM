@@ -32,7 +32,6 @@ const NAME_PARTIAL_RE = /^[A-Za-z\s'-]*$/;
 const NAME_FULL_RE = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
 const INVALID_EMAIL_ERROR = 'Please enter a valid email address.';
 const PASSWORD_MISMATCH_ERROR = 'Passwords do not match.';
-const INVALID_BUSINESS_EMAIL_ERROR = 'Please enter a valid business email address.';
 
 export default function SignupWizard() {
   const router = useRouter();
@@ -45,9 +44,9 @@ export default function SignupWizard() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [businessName, setBusinessName] = useState('');
+  const [businessEmail, setBusinessEmail] = useState('');
   const [businessLocation, setBusinessLocation] = useState('');
   const [businessPhone, setBusinessPhone] = useState('');
-  const [businessEmail, setBusinessEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [otpEmail, setOtpEmail] = useState('');
   const [otpSending, setOtpSending] = useState(false);
@@ -127,9 +126,8 @@ export default function SignupWizard() {
         passwordsMatch,
     );
   const businessPhoneTrimmed = businessPhone.trim();
-  const businessEmailTrimmed = businessEmail.trim().toLowerCase();
-  const businessEmailOk =
-    businessEmailTrimmed.length === 0 ? true : isValidEmail(businessEmailTrimmed);
+  const businessEmailTrimmed = businessEmail.trim();
+  const businessEmailOk = !businessEmailTrimmed || isValidEmail(businessEmailTrimmed);
   const hasAnyStep2Input =
     Boolean(
       firstName.trim() ||
@@ -386,14 +384,10 @@ async function requestEmailOtp(): Promise<boolean> {
       !accountType ||
       !canStep3 ||
       !businessName.trim() ||
-      !businessLocation.trim()
+      !businessLocation.trim() ||
+      !businessEmailOk
     ) {
-      setError('Please complete all required fields.');
-      setShowError(true);
-      return;
-    }
-    if (!businessEmailOk) {
-      setError(INVALID_BUSINESS_EMAIL_ERROR);
+      setError(!businessEmailOk ? INVALID_EMAIL_ERROR : 'Please complete all required fields.');
       setShowError(true);
       return;
     }
@@ -413,9 +407,9 @@ async function requestEmailOtp(): Promise<boolean> {
       fd.set('password', password.trim());
       fd.set('confirmPassword', confirmPassword.trim());
       fd.set('businessName', businessName.trim());
+      fd.set('businessEmail', businessEmail.trim().toLowerCase());
       fd.set('businessLocation', businessLocation.trim());
       fd.set('businessPhone', businessPhoneTrimmed);
-      fd.set('businessEmail', businessEmailTrimmed);
       if (logo) fd.set('logo', logo);
 
       const result = await submitSignupFormData(
@@ -439,8 +433,7 @@ async function requestEmailOtp(): Promise<boolean> {
         setUploadTotalBytes(logo.size);
         setIsLogoUploaded(true);
       }
-      router.push('/');
-      router.refresh();
+      setStep(5);
     } catch {
       setError('Network error. Try again.');
       setShowError(true);
@@ -547,16 +540,17 @@ async function requestEmailOtp(): Promise<boolean> {
       </aside>
 
       <div className="auth-split__form-wrap auth-split__form-wrap--signup">
-        <nav className="auth-stepper auth-stepper--outer" aria-label="Registration steps">
-          <div className="auth-stepper__track">
-            <div className="auth-stepper__steps-row" role="list">
-              {steps.map((s, i) => (
-                <Fragment key={s.id}>
-                  <div
-                    className={`auth-stepper__segment ${step === s.id ? 'is-current' : ''} ${step > s.id ? 'is-complete' : ''} ${step < s.id ? 'is-future' : ''}`}
-                    role="listitem"
-                  >
-                    <div className="auth-stepper__node">
+        {step < 5 && (
+          <nav className="auth-stepper auth-stepper--outer" aria-label="Registration steps">
+            <div className="auth-stepper__track">
+              <div className="auth-stepper__steps-row" role="list">
+                {steps.map((s, i) => (
+                  <Fragment key={s.id}>
+                    <div
+                      className={`auth-stepper__segment ${step === s.id ? 'is-current' : ''} ${step > s.id ? 'is-complete' : ''} ${step < s.id ? 'is-future' : ''}`}
+                      role="listitem"
+                    >
+                      <div className="auth-stepper__node">
                       <span
                         className={`auth-stepper__bubble ${step > s.id ? 'is-done' : ''} ${step === s.id ? 'is-active' : ''} ${step < s.id ? 'is-future' : ''}`}
                         aria-current={step === s.id ? 'step' : undefined}
@@ -568,24 +562,25 @@ async function requestEmailOtp(): Promise<boolean> {
                         ) : null}
                       </span>
                     </div>
-                    <span
-                      className={`auth-stepper__name ${step === s.id ? 'is-current' : ''} ${step > s.id ? 'is-complete' : ''}`}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                  {i < steps.length - 1 && (
-                    <div className="auth-stepper__rail-wrap" aria-hidden>
-                      <div
-                        className={`auth-stepper__rail ${step >= i + 2 ? 'auth-stepper__rail--done' : 'auth-stepper__rail--pending'}`}
-                      />
+                      <span
+                        className={`auth-stepper__name ${step === s.id ? 'is-current' : ''} ${step > s.id ? 'is-complete' : ''}`}
+                      >
+                        {s.label}
+                      </span>
                     </div>
-                  )}
-                </Fragment>
-              ))}
+                    {i < steps.length - 1 && (
+                      <div className="auth-stepper__rail-wrap" aria-hidden>
+                        <div
+                          className={`auth-stepper__rail ${step >= i + 2 ? 'auth-stepper__rail--done' : 'auth-stepper__rail--pending'}`}
+                        />
+                      </div>
+                    )}
+                  </Fragment>
+                ))}
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        )}
 
         <div className="auth-split__form-card">
           <header className="auth-split__header">
@@ -619,7 +614,7 @@ async function requestEmailOtp(): Promise<boolean> {
                 </svg>
               </div>
             )}
-            <h2>{step === 3 ? 'Email Verification' : 'Create your account'}</h2>
+            <h2>{step === 3 ? 'Email Verification' : step === 5 ? 'You are all set' : 'Create your account'}</h2>
             <p>
               {step === 1 && 'Choose how you’ll use FinTrack.'}
               {step === 2 && 'Your sign-in identity and contact details.'}
@@ -630,6 +625,7 @@ async function requestEmailOtp(): Promise<boolean> {
                 </>
               )}
               {step === 4 && 'Your company profile and optional logo.'}
+              {step === 5 && 'Your verified account and business workspace are ready.'}
             </p>
           </header>
 
@@ -975,6 +971,21 @@ async function requestEmailOtp(): Promise<boolean> {
                 />
               </label>
               <label className="auth-field">
+                <span>
+                  <Mail size={14} aria-hidden /> Business email (optional)
+                </span>
+                <input
+                  type="email"
+                  autoComplete="email"
+                  value={businessEmail}
+                  onChange={(e) => {
+                    clearError();
+                    setBusinessEmail(e.target.value);
+                  }}
+                  placeholder="hello@company.com"
+                />
+              </label>
+              <label className="auth-field">
                 <span>Business location</span>
                 <input
                   type="text"
@@ -986,32 +997,18 @@ async function requestEmailOtp(): Promise<boolean> {
                   placeholder="City, country"
                 />
               </label>
-              <div className="auth-field-row">
-                <label className="auth-field">
-                  <span>Business number (optional)</span>
-                  <input
-                    type="tel"
-                    value={businessPhone}
-                    onChange={(e) => {
-                      clearError();
-                      setBusinessPhone(e.target.value);
-                    }}
-                    placeholder="+233 12 345 6789"
-                  />
-                </label>
-                <label className="auth-field">
-                  <span>Business email (optional)</span>
-                  <input
-                    type="email"
-                    value={businessEmail}
-                    onChange={(e) => {
-                      clearError();
-                      setBusinessEmail(e.target.value);
-                    }}
-                    placeholder="info@company.com"
-                  />
-                </label>
-              </div>
+              <label className="auth-field">
+                <span>Business number (optional)</span>
+                <input
+                  type="tel"
+                  value={businessPhone}
+                  onChange={(e) => {
+                    clearError();
+                    setBusinessPhone(e.target.value);
+                  }}
+                  placeholder="+233 12 345 6789"
+                />
+              </label>
               <label className="auth-field auth-field--file">
                 <span>Logo (optional)</span>
                 {!isLogoUploaded && (
@@ -1106,58 +1103,97 @@ async function requestEmailOtp(): Promise<boolean> {
             </div>
           )}
 
-          <div className="auth-split__actions">
-            {step > 1 && (
-              <button
-                type="button"
-                className="btn btn-outline auth-btn-back"
-                onClick={() => {
-                  clearError();
-                  setStep((x) => x - 1);
-                }}
-                disabled={loading}
-              >
-                <ArrowLeft size={16} /> Back
-              </button>
-            )}
-            <div className="auth-split__actions-spacer" />
-            {step < 4 ? (
-              <button
-                type="button"
-                className="btn btn-primary auth-btn-next"
-                disabled={
-                  loading ||
-                  otpSending ||
-                  otpVerifying ||
-                  (step === 1 && !canStep2) ||
-                  (step === 2 && !hasAnyStep2Input) ||
-                  (step === 3 && otpCode.trim().length === 0)
-                }
-                onClick={() => {
-                  void goToNextStep();
-                }}
-              >
-                {step === 3 ? 'Verify code' : 'Continue'} <ArrowRight size={16} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="btn btn-primary auth-btn-next"
-                disabled={
-                  loading ||
-                  !businessName.trim() ||
-                  !businessLocation.trim()
-                }
-                onClick={handleSubmit}
-              >
-                {loading ? <Loader2 className="auth-spin" size={18} /> : <>Complete signup</>}
-              </button>
-            )}
-          </div>
+          {step === 5 && (
+            <div className="auth-all-set" role="status" aria-live="polite">
+              <div className="auth-all-set__stage" aria-hidden>
+                <span className="auth-all-set__ring auth-all-set__ring--outer" />
+                <span className="auth-all-set__ring auth-all-set__ring--middle" />
+                <span className="auth-all-set__check">
+                  <Check size={54} strokeWidth={2.8} />
+                </span>
+                <span className="auth-all-set__spark auth-all-set__spark--one" />
+                <span className="auth-all-set__spark auth-all-set__spark--two" />
+                <span className="auth-all-set__spark auth-all-set__spark--three" />
+                <span className="auth-all-set__spark auth-all-set__spark--four" />
+              </div>
+              <div className="auth-all-set__summary">
+                <span>Personal email verified</span>
+                <span>Business profile created</span>
+                <span>Workspace ready</span>
+              </div>
+            </div>
+          )}
 
-          <p className="auth-split__footer">
-            Already have an account? <Link href="/login">Sign in</Link>
-          </p>
+          {step < 5 ? (
+            <div className="auth-split__actions">
+              {step > 1 && (
+                <button
+                  type="button"
+                  className="btn btn-outline auth-btn-back"
+                  onClick={() => {
+                    clearError();
+                    setStep((x) => x - 1);
+                  }}
+                  disabled={loading}
+                >
+                  <ArrowLeft size={16} /> Back
+                </button>
+              )}
+              <div className="auth-split__actions-spacer" />
+              {step < 4 ? (
+                <button
+                  type="button"
+                  className="btn btn-primary auth-btn-next"
+                  disabled={
+                    loading ||
+                    otpSending ||
+                    otpVerifying ||
+                    (step === 1 && !canStep2) ||
+                    (step === 2 && !hasAnyStep2Input) ||
+                    (step === 3 && otpCode.trim().length === 0)
+                  }
+                  onClick={() => {
+                    void goToNextStep();
+                  }}
+                >
+                  {step === 3 ? 'Verify code' : 'Continue'} <ArrowRight size={16} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="btn btn-primary auth-btn-next"
+                  disabled={
+                    loading ||
+                    !businessName.trim() ||
+                    !businessLocation.trim() ||
+                    !businessEmailOk
+                  }
+                  onClick={handleSubmit}
+                >
+                  {loading ? <Loader2 className="auth-spin" size={18} /> : <>Complete signup</>}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="auth-split__actions auth-split__actions--all-set">
+              <button
+                type="button"
+                className="btn btn-primary auth-btn-next"
+                onClick={() => {
+                  router.push('/');
+                  router.refresh();
+                }}
+              >
+                Continue to dashboard <ArrowRight size={16} />
+              </button>
+            </div>
+          )}
+
+          {step < 5 && (
+            <p className="auth-split__footer">
+              Already have an account? <Link href="/login">Sign in</Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

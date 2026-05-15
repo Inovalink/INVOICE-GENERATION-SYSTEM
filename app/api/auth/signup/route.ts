@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs';
 import { AccountType, MembershipRole } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { AUTH_COOKIE } from '@/lib/auth/constants';
+import { isValidEmail } from '@/lib/auth/email';
 import { createSessionToken } from '@/lib/auth/session';
 import { consumeSignupEmailVerification } from '@/lib/auth/otpStore';
 
@@ -34,6 +35,10 @@ export async function POST(request: Request) {
   const password = String(form.get('password') ?? '');
   const confirmPassword = String(form.get('confirmPassword') ?? '');
   const businessName = String(form.get('businessName') ?? '').trim();
+  const businessEmailRaw = String(form.get('businessEmail') ?? '').trim().toLowerCase();
+  const businessEmail = businessEmailRaw.length > 0 ? businessEmailRaw : null;
+  const businessPhoneRaw = String(form.get('businessPhone') ?? '').trim();
+  const businessPhone = businessPhoneRaw.length > 0 ? businessPhoneRaw : null;
   const businessLocation = String(form.get('businessLocation') ?? '').trim();
   const logo = form.get('logo');
 
@@ -45,6 +50,9 @@ export async function POST(request: Request) {
   }
   if (password !== confirmPassword) {
     return NextResponse.json({ message: 'Passwords do not match' }, { status: 400 });
+  }
+  if (businessEmail && !isValidEmail(businessEmail)) {
+    return NextResponse.json({ message: 'Please enter a valid business email address' }, { status: 400 });
   }
   if (!(await consumeSignupEmailVerification(email))) {
     return NextResponse.json({ message: 'Please verify your email first' }, { status: 400 });
@@ -73,6 +81,8 @@ export async function POST(request: Request) {
     const newWorkspace = await tx.workspace.create({
       data: {
         name: businessName,
+        email: businessEmail,
+        phone: businessPhone,
         location: businessLocation,
       },
     });

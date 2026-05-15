@@ -1579,6 +1579,159 @@
   animation: auth-spin 0.85s linear infinite;
 }
 
+.auth-all-set {
+  margin-top: 1.45rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.auth-all-set__stage {
+  position: relative;
+  width: min(260px, 72vw);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.auth-all-set__ring {
+  position: absolute;
+  inset: 18%;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 28%, transparent);
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--accent-primary) 12%, transparent) 0 38%, transparent 39%),
+    conic-gradient(from 0deg, color-mix(in srgb, var(--accent-primary) 80%, #ffffff), #22c55e, #06b6d4, color-mix(in srgb, var(--accent-primary) 80%, #ffffff));
+  opacity: 0.9;
+  animation: auth-all-set-spin 6s linear infinite;
+}
+
+.auth-all-set__ring--outer {
+  inset: 5%;
+  opacity: 0.18;
+  animation-duration: 9s;
+}
+
+.auth-all-set__ring--middle {
+  inset: 19%;
+  filter: blur(0.2px);
+}
+
+.auth-all-set__check {
+  position: relative;
+  z-index: 2;
+  width: 112px;
+  height: 112px;
+  border-radius: 32px;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--accent-primary), #16a34a 62%, #0891b2);
+  box-shadow: 0 22px 46px -24px color-mix(in srgb, var(--accent-primary) 85%, #0f172a);
+  animation: auth-all-set-pop 680ms cubic-bezier(0.2, 1.1, 0.28, 1) both;
+}
+
+.auth-all-set__spark {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 8px rgb(34 197 94 / 0.12);
+  animation: auth-all-set-float 2.6s ease-in-out infinite;
+}
+
+.auth-all-set__spark--one {
+  top: 18%;
+  left: 20%;
+}
+
+.auth-all-set__spark--two {
+  top: 24%;
+  right: 16%;
+  background: #06b6d4;
+  animation-delay: 0.35s;
+}
+
+.auth-all-set__spark--three {
+  right: 24%;
+  bottom: 16%;
+  background: #f59e0b;
+  animation-delay: 0.7s;
+}
+
+.auth-all-set__spark--four {
+  left: 18%;
+  bottom: 25%;
+  background: var(--accent-primary);
+  animation-delay: 1.05s;
+}
+
+.auth-all-set__summary {
+  width: 100%;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.auth-all-set__summary span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-primary) 16%, var(--border-color));
+  background: color-mix(in srgb, var(--accent-primary) 5%, #ffffff);
+  color: var(--text-primary);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.auth-split__actions--all-set {
+  justify-content: center;
+}
+
+@keyframes auth-all-set-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes auth-all-set-pop {
+  0% {
+    transform: scale(0.72);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes auth-all-set-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-all-set__ring,
+  .auth-all-set__check,
+  .auth-all-set__spark {
+    animation: none;
+  }
+}
+
+.dark .auth-all-set__summary span {
+  background: color-mix(in srgb, var(--accent-primary) 9%, var(--card));
+  border-color: color-mix(in srgb, var(--accent-primary) 22%, var(--border-color));
+}
+
 @keyframes auth-spin {
   to {
     transform: rotate(360deg);

@@ -17,12 +17,12 @@ export async function POST(request: Request) {
   const code = randomCode();
 
   try {
+    await setOtp(email, code, 15 * 60 * 1000);
     await sendMail({
       to: email,
       subject: 'Your Invoice System verification code',
       html: otpEmailTemplate(code),
     });
-    await setOtp(email, code, 15 * 60 * 1000);
   } catch (err) {
     console.error('[send-otp] Failed to send email:', err);
     return NextResponse.json(
