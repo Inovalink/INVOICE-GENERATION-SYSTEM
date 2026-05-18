@@ -31,6 +31,7 @@ type Account = 'SOLO' | 'TEAM';
 const NAME_PARTIAL_RE = /^[A-Za-z\s'-]*$/;
 const NAME_FULL_RE = /^[A-Za-z]+(?:[ '-][A-Za-z]+)*$/;
 const INVALID_EMAIL_ERROR = 'Please enter a valid email address.';
+const EMAIL_EXISTS_ERROR = 'An account with this email already exists.';
 const PASSWORD_MISMATCH_ERROR = 'Passwords do not match.';
 
 export default function SignupWizard() {
@@ -64,6 +65,7 @@ export default function SignupWizard() {
   const [isPreparingLogo, setIsPreparingLogo] = useState(false);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isLogoUploaded, setIsLogoUploaded] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
   const [loading, setLoading] = useState(false);
   const logoReadSeq = useRef(0);
   const otpInputRefs = useRef<Array<HTMLInputElement | null>>([]);
@@ -189,6 +191,7 @@ export default function SignupWizard() {
     });
   }
   const showInlineEmailError = step === 2 && showError && error === INVALID_EMAIL_ERROR;
+  const showInlineEmailExistsError = step === 2 && showError && error === EMAIL_EXISTS_ERROR;
   const showInlinePasswordMismatchError =
     step === 2 && showError && error === PASSWORD_MISMATCH_ERROR;
   const otpVerifiedForEmail = otpVerifiedFor === emailTrimmed && emailTrimmed.length > 0;
@@ -339,6 +342,25 @@ async function requestEmailOtp(): Promise<boolean> {
         return;
       }
       clearError();
+      // Check whether this email is already registered before sending OTP
+      setCheckingEmail(true);
+      try {
+        const res = await fetch('/api/auth/check-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailTrimmed }),
+        });
+        const data = (await res.json().catch(() => ({}))) as { exists?: boolean };
+        if (data.exists) {
+          setError(EMAIL_EXISTS_ERROR);
+          setShowError(true);
+          return;
+        }
+      } catch {
+        // Network hiccup — let the flow continue; server will catch it on submit
+      } finally {
+        setCheckingEmail(false);
+      }
       const sent = await requestEmailOtp();
       if (!sent) return;
       setStep(3);
@@ -629,7 +651,7 @@ async function requestEmailOtp(): Promise<boolean> {
             </p>
           </header>
 
-          {showError && error && !showInlineEmailError && !showInlinePasswordMismatchError && (
+          {showError && error && !showInlineEmailError && !showInlineEmailExistsError && !showInlinePasswordMismatchError && (
             <div className="auth-split__error" role="alert">
               {error}
             </div>
@@ -780,6 +802,14 @@ async function requestEmailOtp(): Promise<boolean> {
                 {showInlineEmailError && (
                   <div className="auth-inline-field-error" role="alert">
                     {INVALID_EMAIL_ERROR}
+                  </div>
+                )}
+                {showInlineEmailExistsError && (
+                  <div className="auth-inline-field-error" role="alert">
+                    {EMAIL_EXISTS_ERROR}{' '}
+                    <Link href="/login" className="auth-inline-field-error__link">
+                      Sign in instead
+                    </Link>
                   </div>
                 )}
               </label>
@@ -1146,6 +1176,7 @@ async function requestEmailOtp(): Promise<boolean> {
                   className="btn btn-primary auth-btn-next"
                   disabled={
                     loading ||
+                    checkingEmail ||
                     otpSending ||
                     otpVerifying ||
                     (step === 1 && !canStep2) ||
@@ -1156,7 +1187,11 @@ async function requestEmailOtp(): Promise<boolean> {
                     void goToNextStep();
                   }}
                 >
-                  {step === 3 ? 'Verify code' : 'Continue'} <ArrowRight size={16} />
+                  {checkingEmail
+                    ? <><Loader2 className="auth-spin" size={16} /> Checking...</>
+                    : step === 3
+                    ? <>Verify code <ArrowRight size={16} /></>
+                    : <>Continue <ArrowRight size={16} /></>}
                 </button>
               ) : (
                 <button

@@ -7,6 +7,7 @@ import { getInvoiceTotalCardData } from '@/lib/invoiceTotalSeries';
 import { getTopSellingProducts } from '@/lib/topSellingProducts';
 import { buildDashboardAlerts } from '@/lib/dashboardAlerts';
 import { getSessionClaims } from '@/lib/auth/getCurrentUser';
+import { invoiceTenantWhere, requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 import MetricSummaryCard from '@/components/dashboard/MetricSummaryCard';
 import DashboardAlerts from '@/components/dashboard/DashboardAlerts';
 import RevenueTrendsSection from '@/components/finance/RevenueTrendsSection';
@@ -23,7 +24,6 @@ const safeNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export const dynamic = 'force-dynamic';
 
 function localDateString(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -33,13 +33,16 @@ export default async function FinancePage() {
   await connection();
 
   const session = await getSessionClaims();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
+  const invoiceScope = invoiceTenantWhere(scope);
   const todayStr = localDateString(new Date());
 
   const [financeMetrics, invoiceTotalCardData, initialTopSelling, dismissedRows, invoices] =
     await Promise.all([
-      getFinanceSummaryMetrics(prisma),
-      getInvoiceTotalCardData(prisma),
-      getTopSellingProducts(prisma, { sort: 'revenue', limit: 10 }),
+      getFinanceSummaryMetrics(prisma, scope),
+      getInvoiceTotalCardData(prisma, scope),
+      getTopSellingProducts(prisma, { sort: 'revenue', limit: 10, scope }),
       session
         ? prisma.dismissedAlert.findMany({
             where: { userId: session.sub, dismissedDate: todayStr },
@@ -47,6 +50,7 @@ export default async function FinancePage() {
           })
         : Promise.resolve([]),
       prisma.invoice.findMany({
+        where: invoiceScope,
         orderBy: { createdAt: 'desc' },
         include: {
           client: true,
@@ -57,7 +61,7 @@ export default async function FinancePage() {
     ]);
 
   const dismissedIds = new Set(dismissedRows.map((r) => r.alertId));
-  const dashboardAlerts = await buildDashboardAlerts(prisma, { dismissedAlertIds: dismissedIds });
+  const dashboardAlerts = await buildDashboardAlerts(prisma, { dismissedAlertIds: dismissedIds, scope });
 
   const invoicesForClient: InvoiceSummary[] = invoices.map((inv) => ({
     id: inv.id,

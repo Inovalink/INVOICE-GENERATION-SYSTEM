@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 
 async function createService(formData: FormData) {
   'use server';
@@ -9,9 +10,11 @@ async function createService(formData: FormData) {
   const description = formData.get('description') as string;
   const price = parseFloat(formData.get('price') as string);
   const isHourly = formData.get('pricingType') === 'hourly';
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   await prisma.service.create({
-    data: { name, category, description, price, isHourly }
+    data: { name, category, description, price, isHourly, workspaceId: scope.workspaceId }
   });
 
   redirect('/services?ft_toast=service_added');

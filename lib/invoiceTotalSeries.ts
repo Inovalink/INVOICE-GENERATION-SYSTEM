@@ -9,6 +9,7 @@ import {
   subWeeks,
 } from 'date-fns';
 import { isInvoiceOverdue } from '@/lib/invoiceDue';
+import { invoiceTenantWhere, type TenantScope } from '@/lib/auth/tenantScope';
 
 export type InvoiceTotalFilter = 'paid' | 'pending' | 'overdue' | 'proforma';
 
@@ -57,9 +58,12 @@ const FILTERS: InvoiceTotalFilter[] = ['paid', 'pending', 'overdue', 'proforma']
  * Weekly (7 ISO weeks) and monthly (6 calendar months) counts of issued invoices
  * by coarse status, for the Total Invoices bar card.
  */
-export async function getInvoiceTotalCardData(prisma: PrismaClient): Promise<InvoiceTotalCardPayload> {
+export async function getInvoiceTotalCardData(
+  prisma: PrismaClient,
+  scope?: TenantScope,
+): Promise<InvoiceTotalCardPayload> {
   const rows = await prisma.invoice.findMany({
-    where: { status: { not: 'CANCELLED' } },
+    where: { ...(scope ? invoiceTenantWhere(scope) : {}), status: { not: 'CANCELLED' } },
     select: {
       issueDate: true,
       status: true,

@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { receiptTenantWhere, scopeFromContext } from '@/lib/auth/tenantScope';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -7,8 +9,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const receipt = await prisma.receipt.findUnique({
-      where: { id },
+    const ctx = await getCurrentContext();
+    if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const scope = scopeFromContext(ctx);
+
+    const receipt = await prisma.receipt.findFirst({
+      where: { id, ...receiptTenantWhere(scope) },
       include: {
         user: { select: { name: true, email: true } },
         invoice: {

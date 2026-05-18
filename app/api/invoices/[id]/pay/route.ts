@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { type PrismaClient, PaymentMethod } from '@prisma/client';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
-import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
+import { getCurrentContext, getDefaultUserId } from '@/lib/auth/getCurrentUser';
+import { invoiceTenantWhere, scopeFromContext } from '@/lib/auth/tenantScope';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
 import { prisma } from '@/lib/prisma';
 
@@ -30,6 +31,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const resolvedParams = await params;
     const invoiceId = resolvedParams.id;
+    const ctx = await getCurrentContext();
+    if (!ctx) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+    const scope = scopeFromContext(ctx);
     const body = await request.formData();
     const paymentKindRaw = (body.get('paymentKind') as string) || 'full';
     const paymentKind = paymentKindRaw === 'partial' ? 'partial' : 'full';
@@ -72,8 +78,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       );
     }
 
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId }
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, ...invoiceTenantWhere(scope) }
     });
 
     if (!invoice || (invoice.status !== 'FINAL' && invoice.status !== 'PARTIALLY_PAID')) {
@@ -165,11 +171,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
     // 3. Generate or update receipt for fully paid invoice
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await prisma.receipt.count();
+    const count = await prisma.receipt.count({ where: { invoice: invoiceTenantWhere(scope) } });
     const receiptNumber = `REC-${dateStr}-${(count + 1).toString().padStart(4, '0')}`;
 
-    const defaultUserId = await getDefaultUserId();
-    if (!defaultUserId) throw new Error('User required');
+    const defaultUserId = ctx.user.id;
 
     const existingReceipt = await prisma.receipt.findUnique({
       where: { invoiceId: invoice.id },

@@ -2,14 +2,17 @@ import Link from 'next/link';
 import { connection } from 'next/server';
 import ReceiptViewButton from '@/components/receipts/ReceiptViewButton';
 import { prisma } from '@/lib/prisma';
+import { receiptTenantWhere, requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 import './receipts.css';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ReceiptsPage() {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   const receipts = await prisma.receipt.findMany({
+    where: receiptTenantWhere(scope),
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,

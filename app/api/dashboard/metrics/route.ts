@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSessionClaims } from '@/lib/auth/getCurrentUser';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { scopeFromContext } from '@/lib/auth/tenantScope';
 import { getFinanceSummaryMetrics } from '@/lib/financeSummaryMetrics';
 import { prisma } from '@/lib/prisma';
 
@@ -9,12 +10,13 @@ const safeNum = (v: unknown): number => {
 };
 
 export async function GET() {
-  const session = await getSessionClaims();
-  if (!session) {
+  const ctx = await getCurrentContext();
+  if (!ctx) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
+  const scope = scopeFromContext(ctx);
   try {
-    const raw = await getFinanceSummaryMetrics(prisma);
+    const raw = await getFinanceSummaryMetrics(prisma, scope);
     const metrics = {
       totalRevenueLifetime: safeNum(raw.totalRevenueLifetime),
       thisMonthRevenue: safeNum(raw.thisMonthRevenue),

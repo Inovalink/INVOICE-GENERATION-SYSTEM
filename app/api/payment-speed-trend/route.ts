@@ -3,6 +3,8 @@ import {
   getPaymentSpeedTrendSeries,
   isPaymentSpeedTrendGranularity,
 } from '@/lib/paymentSpeedTrend';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { scopeFromContext } from '@/lib/auth/tenantScope';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -16,9 +18,12 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   }
+  const ctx = await getCurrentContext();
+  if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  const scope = scopeFromContext(ctx);
 
   try {
-    const series = await getPaymentSpeedTrendSeries(prisma, { granularity: raw });
+    const series = await getPaymentSpeedTrendSeries(prisma, { granularity: raw, scope });
     return NextResponse.json({ granularity: raw, series });
   } catch (e) {
     console.error('payment-speed-trend', e);

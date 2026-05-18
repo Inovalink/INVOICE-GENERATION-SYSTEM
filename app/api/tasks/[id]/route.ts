@@ -9,7 +9,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try {
     const userId = await getDefaultUserId();
     if (!userId) {
-      return NextResponse.json({ message: 'No user in system' }, { status: 500 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;
@@ -55,7 +55,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   try {
     const userId = await getDefaultUserId();
     if (!userId) {
-      return NextResponse.json({ message: 'No user in system' }, { status: 500 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = await params;

@@ -7,13 +7,13 @@ import { getOverdueSourceRows } from '@/lib/financeSummaryMetrics';
 import '../dashboard.css';
 import './invoices.css';
 import { prisma } from '@/lib/prisma';
+import { invoiceTenantWhere, requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 
 const safeNumber = (value: unknown) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export const dynamic = 'force-dynamic';
 
 type PageProps = {
   searchParams?: Promise<{ from?: string; to?: string }>;
@@ -34,6 +34,9 @@ function formatRangeLabel(from: Date, to: Date): string {
 
 export default async function InvoicesPage({ searchParams }: PageProps) {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
+  const invoiceScope = invoiceTenantWhere(scope);
 
   const sp = (await searchParams) ?? {};
   const fromDate = parseRangeDate(sp.from);
@@ -46,8 +49,8 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
   const [invoices, overdueSourceRows] = await Promise.all([
     prisma.invoice.findMany({
       where: hasRange
-        ? { issueDate: { gte: fromDate!, lt: toDateEnd! } }
-        : undefined,
+        ? { ...invoiceScope, issueDate: { gte: fromDate!, lt: toDateEnd! } }
+        : invoiceScope,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -70,7 +73,7 @@ export default async function InvoicesPage({ searchParams }: PageProps) {
         items: { select: { id: true, description: true, quantity: true, unitPrice: true } },
       },
     }),
-    getOverdueSourceRows(prisma),
+    getOverdueSourceRows(prisma, scope),
   ]);
 
   const overdueInvoices = overdueSourceRows.filter((inv) =>

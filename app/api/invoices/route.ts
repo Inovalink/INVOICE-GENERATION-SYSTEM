@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { clientTenantWhere, invoiceTenantWhere, scopeFromContext, serviceTenantWhere } from '@/lib/auth/tenantScope';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
 import { prisma } from '@/lib/prisma';
 
@@ -11,12 +12,12 @@ export async function GET(request: Request) {
     const clientId = searchParams.get('clientId');
 
     const ctx = await getCurrentContext();
-    const defaultUser = ctx?.user ?? (await prisma.user.findFirst());
-    if (!defaultUser) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const scope = scopeFromContext(ctx);
 
     const invoices = await prisma.invoice.findMany({
       where: {
-        userId: defaultUser.id,
+        ...invoiceTenantWhere(scope),
         ...(clientId ? { clientId } : {}),
       },
       select: {
@@ -76,18 +77,41 @@ export async function POST(request: Request) {
 
     // Generate Invoice Number (e.g., INV-YYYYMMDD-XXXX)
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await prisma.invoice.count();
-    const invoiceNumber = `INV-${dateStr}-${(count + 1).toString().padStart(4, '0')}`;
-
     const ctx = await getCurrentContext();
-    const defaultUser = ctx?.user ?? (await prisma.user.findFirst());
-    if (!defaultUser) {
+    if (!ctx) {
       return NextResponse.json(
         { message: 'Sign in or create an account to create invoices.' },
         { status: 401 },
       );
     }
-    const workspaceId = ctx?.workspace?.id ?? null;
+    const scope = scopeFromContext(ctx);
+    const invoiceScope = invoiceTenantWhere(scope);
+
+    const count = await prisma.invoice.count({ where: invoiceScope });
+    const invoiceNumber = `INV-${dateStr}-${(count + 1).toString().padStart(4, '0')}`;
+
+    const defaultUser = ctx.user;
+    const workspaceId = scope.workspaceId;
+
+    const client = await prisma.client.findFirst({
+      where: { id: clientId, ...clientTenantWhere(scope) },
+      select: { id: true },
+    });
+    if (!client) {
+      return NextResponse.json({ message: 'Client not found for this account.' }, { status: 404 });
+    }
+
+    const serviceIds = items
+      .map((item: { serviceId?: string }) => item.serviceId)
+      .filter((id: unknown): id is string => typeof id === 'string' && id.length > 0);
+    if (serviceIds.length > 0) {
+      const allowedServiceCount = await prisma.service.count({
+        where: { id: { in: serviceIds }, ...serviceTenantWhere(scope) },
+      });
+      if (allowedServiceCount !== new Set(serviceIds).size) {
+        return NextResponse.json({ message: 'One or more services are not available for this account.' }, { status: 404 });
+      }
+    }
 
     const allowedStatuses = ['PROFORMA', 'FINAL', 'PAID', 'PARTIALLY_PAID', 'CANCELLED'];
     const resolvedStatus = allowedStatuses.includes(status) ? status : 'PROFORMA';

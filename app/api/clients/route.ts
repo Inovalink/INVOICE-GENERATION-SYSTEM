@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
-import { getDefaultUserId } from '@/lib/auth/getCurrentUser';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { clientTenantWhere, scopeFromContext } from '@/lib/auth/tenantScope';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const userId = await getDefaultUserId();
-    if (!userId) return NextResponse.json({ message: 'No user in system' }, { status: 500 });
+    const ctx = await getCurrentContext();
+    if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const scope = scopeFromContext(ctx);
 
     const clients = await prisma.client.findMany({
+      where: clientTenantWhere(scope),
       select: { id: true, name: true, company: true },
       orderBy: { name: 'asc' },
     });

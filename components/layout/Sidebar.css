@@ -393,6 +393,21 @@
   text-align: left;
 }
 
+/* Logout nav item */
+.nav-link--logout {
+  color: var(--text-secondary);
+}
+
+.nav-link--logout:hover {
+  background: color-mix(in srgb, #ef4444 10%, transparent) !important;
+  color: #ef4444 !important;
+}
+
+.nav-link--logout:hover .nav-icon-wrap {
+  background: color-mix(in srgb, #ef4444 12%, transparent) !important;
+  color: #ef4444 !important;
+}
+
 /* CTA / accent link (sign up) */
 .nav-link--cta {
   color: var(--accent-primary);

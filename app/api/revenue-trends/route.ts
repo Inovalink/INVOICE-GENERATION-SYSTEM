@@ -5,6 +5,8 @@ import {
   isRevenueGranularity,
 } from '@/lib/revenueTrends';
 import { parseLocalDayBounds } from '@/lib/financeDayBounds';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { scopeFromContext } from '@/lib/auth/tenantScope';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -12,6 +14,9 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const focusRaw = searchParams.get('focusDate');
+  const ctx = await getCurrentContext();
+  if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  const scope = scopeFromContext(ctx);
 
   if (focusRaw) {
     const bounds = parseLocalDayBounds(focusRaw);
@@ -19,7 +24,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ message: 'Invalid focusDate. Use YYYY-MM-DD.' }, { status: 400 });
     }
     try {
-      const series = await getRevenueTrendSeriesEndingOnDay(prisma, bounds.start, 14);
+      const series = await getRevenueTrendSeriesEndingOnDay(prisma, bounds.start, 14, scope);
       return NextResponse.json({ granularity: 'daily' as const, focusDate: focusRaw, series });
     } catch (e) {
       console.error('revenue-trends', e);
@@ -36,7 +41,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const series = await getRevenueTrendSeries(prisma, raw);
+    const series = await getRevenueTrendSeries(prisma, raw, scope);
     return NextResponse.json({ granularity: raw, series });
   } catch (e) {
     console.error('revenue-trends', e);

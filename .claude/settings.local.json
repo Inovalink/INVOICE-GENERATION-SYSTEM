@@ -8,7 +8,8 @@
       "Bash(npx next *)",
       "Bash(npx eslint *)",
       "Bash(npx prisma *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(Get-Content \"C:\\\\Users\\\\THE MASTERMIND\\\\Desktop\\\\INVOICE\\\\invoice-system\\\\package.json\")"
     ]
   }
 }

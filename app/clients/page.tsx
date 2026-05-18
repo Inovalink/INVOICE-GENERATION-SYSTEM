@@ -1,15 +1,18 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { clientTenantWhere, requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 import { Edit, Trash2, UserPlus } from 'lucide-react';
 import './clients.css';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ClientsPage() {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   const clients = await prisma.client.findMany({
+    where: clientTenantWhere(scope),
     orderBy: { createdAt: 'desc' }
   });
 

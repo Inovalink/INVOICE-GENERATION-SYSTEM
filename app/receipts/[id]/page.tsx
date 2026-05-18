@@ -5,15 +5,17 @@ import { getPaymentMethodTitle } from '@/lib/paymentDisplay';
 import { RECEIPT_DEFAULT_NOTE } from '@/lib/receiptDefaultNotes';
 import PrintButton from '@/components/invoices/PrintButton';
 import { prisma } from '@/lib/prisma';
+import { receiptTenantWhere, requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ReceiptViewPage({ params }: { params: Promise<{ id: string }> }) {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   const resolvedParams = await params;
-  const receipt = await prisma.receipt.findUnique({
-    where: { id: resolvedParams.id },
+  const receipt = await prisma.receipt.findFirst({
+    where: { id: resolvedParams.id, ...receiptTenantWhere(scope) },
     include: {
       invoice: {
         include: {

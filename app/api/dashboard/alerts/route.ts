@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { getSessionClaims } from '@/lib/auth/getCurrentUser';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { scopeFromContext } from '@/lib/auth/tenantScope';
 import { parseLocalDayBounds } from '@/lib/financeDayBounds';
 import { buildDashboardAlerts } from '@/lib/dashboardAlerts';
 import { prisma } from '@/lib/prisma';
@@ -9,10 +10,11 @@ function localDateString(d: Date): string {
 }
 
 export async function GET(request: Request) {
-  const session = await getSessionClaims();
-  if (!session) {
+  const ctx = await getCurrentContext();
+  if (!ctx) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
+  const scope = scopeFromContext(ctx);
 
   const { searchParams } = new URL(request.url);
   const dateRaw = searchParams.get('date');
@@ -27,7 +29,7 @@ export async function GET(request: Request) {
     const dateStr = localDateString(targetDate);
 
     const dismissed = await prisma.dismissedAlert.findMany({
-      where: { userId: session.sub, dismissedDate: dateStr },
+      where: { userId: scope.userId, dismissedDate: dateStr },
       select: { alertId: true },
     });
     const dismissedIds = new Set(dismissed.map((d) => d.alertId));
@@ -35,6 +37,7 @@ export async function GET(request: Request) {
     const alerts = await buildDashboardAlerts(prisma, {
       dayBounds: bounds ?? undefined,
       dismissedAlertIds: dismissedIds,
+      scope,
     });
 
     return NextResponse.json({

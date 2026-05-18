@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 
 async function createClient(formData: FormData) {
   'use server';
@@ -9,9 +10,11 @@ async function createClient(formData: FormData) {
   const email = formData.get('email') as string;
   const phone = formData.get('phone') as string;
   const address = formData.get('address') as string;
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   await prisma.client.create({
-    data: { name, company, email, phone, address }
+    data: { name, company, email, phone, address, workspaceId: scope.workspaceId }
   });
 
   redirect('/clients?ft_toast=client_added');

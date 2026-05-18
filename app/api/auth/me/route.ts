@@ -17,12 +17,15 @@ export async function GET() {
     return NextResponse.json({ authenticated: false });
   }
 
-  return NextResponse.json({
-    authenticated: true,
-    user: {
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
+  return NextResponse.json(
+    {
+      authenticated: true,
+      user: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
     },
-  });
+    { headers: { 'Cache-Control': 'private, max-age=30, stale-while-revalidate=60' } },
+  );
 }

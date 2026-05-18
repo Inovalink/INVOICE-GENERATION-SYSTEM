@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { flushSync } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -21,6 +21,7 @@ import {
   ArrowRight,
 } from 'lucide-react';
 import { formatUserDisplayName } from '@/lib/formatUserDisplayName';
+import type { AuthMeClientState } from '@/lib/auth/authMeClient';
 import {
   applyTheme,
   getServerThemeSnapshot,
@@ -30,11 +31,6 @@ import {
 } from '@/components/layout/themeStore';
 import { useFinancialAlertNotificationsSafe } from '@/components/notifications/FinancialAlertNotifications';
 import './Topbar.css';
-
-type MeResponse = {
-  authenticated: boolean;
-  user?: { email: string; firstName: string; lastName: string };
-};
 
 type GlobalSuggestion = {
   id: string;
@@ -94,9 +90,11 @@ function topbarTitleForPath(pathname: string): string {
 export default function Topbar({
   onToggleSidebar,
   showSidebarToggle = false,
+  authMe,
 }: {
   onToggleSidebar?: () => void;
   showSidebarToggle?: boolean;
+  authMe: AuthMeClientState;
 }) {
   const pathname = usePathname() ?? '';
   const router = useRouter();
@@ -105,7 +103,6 @@ export default function Topbar({
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const theme = useSyncExternalStore(subscribeTheme, getThemeSnapshot, getServerThemeSnapshot);
   const [kbdHint, setKbdHint] = useState('⌘K');
-  const [me, setMe] = useState<MeResponse | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState<GlobalSuggestion[]>([]);
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -114,17 +111,6 @@ export default function Topbar({
   const financialNotify = useFinancialAlertNotificationsSafe();
   const [notificationPanelOpen, setNotificationPanelOpen] = useState(false);
   const notificationPanelRef = useRef<HTMLDivElement>(null);
-
-  const refreshMe = useCallback(() => {
-    fetch('/api/auth/me')
-      .then((r) => (r.ok ? r.json() : { authenticated: false }))
-      .then(setMe)
-      .catch(() => setMe({ authenticated: false }));
-  }, []);
-
-  useEffect(() => {
-    refreshMe();
-  }, [refreshMe]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -229,14 +215,14 @@ export default function Topbar({
     }
   };
 
-  const user = me?.authenticated ? me.user : undefined;
+  const user = authMe?.authenticated ? authMe.user : undefined;
   const displayName = user
     ? formatUserDisplayName(user.firstName, user.lastName) || user.email
-    : me === null
+    : authMe === null
       ? '…'
       : 'Account';
-  const displayEmail = user?.email ?? (me === null ? '…' : '');
-  const avatarText = user ? initialsForUser(user) : me === null ? '…' : '?';
+  const displayEmail = user?.email ?? (authMe === null ? '…' : '');
+  const avatarText = user ? initialsForUser(user) : authMe === null ? '…' : '?';
 
   return (
     <header className="topbar">
@@ -363,7 +349,7 @@ export default function Topbar({
             setNotificationPanelOpen((open) => !open);
             financialNotify?.markAllNotificationsRead();
             if (
-              !me?.authenticated ||
+              !authMe?.authenticated ||
               !financialNotify ||
               typeof Notification === 'undefined' ||
               Notification.permission !== 'default'

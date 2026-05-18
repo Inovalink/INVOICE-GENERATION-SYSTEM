@@ -16,15 +16,11 @@ export type CurrentContext = {
   workspace: Workspace | null;
 };
 
-/** Authenticated user id, or the first user in the database (legacy dev fallback). */
+/** Authenticated user id, or null when the request is not signed in. */
 export async function getDefaultUserId(): Promise<string | null> {
   const session = await getSessionClaims();
   if (session?.sub) return session.sub;
-  const first = await prisma.user.findFirst({
-    orderBy: { createdAt: 'asc' },
-    select: { id: true },
-  });
-  return first?.id ?? null;
+  return null;
 }
 
 export async function getCurrentContext(): Promise<CurrentContext | null> {

@@ -7,6 +7,7 @@ import {
   formatRevenueWoW,
   type MoMTrend,
 } from '@/lib/formatGhs';
+import { invoiceTenantWhere, paymentTenantWhere, type TenantScope } from '@/lib/auth/tenantScope';
 
 export type OverdueSourceInvoice = Prisma.InvoiceGetPayload<{
   select: {
@@ -62,9 +63,13 @@ const neutralTrend = (label: string): MoMTrend => ({
 });
 
 /** Open invoices used for overdue detection on the dashboard (single query, no finance aggregates). */
-export async function getOverdueSourceRows(prisma: PrismaClient): Promise<OverdueSourceInvoice[]> {
+export async function getOverdueSourceRows(
+  prisma: PrismaClient,
+  scope?: TenantScope,
+): Promise<OverdueSourceInvoice[]> {
   return prisma.invoice.findMany({
     where: {
+      ...(scope ? invoiceTenantWhere(scope) : {}),
       status: { in: ['FINAL', 'PARTIALLY_PAID', 'PROFORMA'] },
     },
     orderBy: { dueDate: 'asc' },
@@ -86,7 +91,10 @@ export async function getOverdueSourceRows(prisma: PrismaClient): Promise<Overdu
   });
 }
 
-export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<FinanceSummaryMetrics> {
+export async function getFinanceSummaryMetrics(
+  prisma: PrismaClient,
+  scope?: TenantScope,
+): Promise<FinanceSummaryMetrics> {
   const now = new Date();
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -109,22 +117,26 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     marginLastWeek,
   ] = await Promise.all([
     prisma.payment.aggregate({
+      where: scope ? paymentTenantWhere(scope) : undefined,
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
       where: {
+        ...(scope ? paymentTenantWhere(scope) : {}),
         paymentDate: { gte: thisMonthStart, lt: nextMonthStart },
       },
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
       where: {
+        ...(scope ? paymentTenantWhere(scope) : {}),
         paymentDate: { gte: lastMonthStart, lt: thisMonthStart },
       },
       _sum: { amount: true },
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { notIn: ['PAID', 'CANCELLED'] },
         amountDue: { gt: 0 },
       },
@@ -132,21 +144,23 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     }),
     prisma.invoice.count({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { notIn: ['PAID', 'CANCELLED'] },
         amountDue: { gt: 0 },
       },
     }),
-    getOverdueSourceRows(prisma),
+    getOverdueSourceRows(prisma, scope),
     prisma.invoice.aggregate({
-      where: { status: { not: 'CANCELLED' } },
+      where: { ...(scope ? invoiceTenantWhere(scope) : {}), status: { not: 'CANCELLED' } },
       _sum: { total: true },
     }),
     prisma.invoice.aggregate({
-      where: { status: 'PAID' },
+      where: { ...(scope ? invoiceTenantWhere(scope) : {}), status: 'PAID' },
       _sum: { subtotal: true, discount: true },
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { not: 'CANCELLED' },
         issueDate: { gte: weekStart },
       },
@@ -154,6 +168,7 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { not: 'CANCELLED' },
         issueDate: { gte: prevWeekStart, lt: weekStart },
       },
@@ -161,6 +176,7 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { not: 'CANCELLED' },
         issueDate: { gte: weekStart },
       },
@@ -168,6 +184,7 @@ export async function getFinanceSummaryMetrics(prisma: PrismaClient): Promise<Fi
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { not: 'CANCELLED' },
         issueDate: { gte: prevWeekStart, lt: weekStart },
       },
@@ -251,6 +268,7 @@ function profitFromPayments(
 export async function getFinanceDayMetrics(
   prisma: PrismaClient,
   bounds: { start: Date; end: Date },
+  scope?: TenantScope,
 ): Promise<FinanceDayMetrics> {
   const prevEnd = bounds.start;
   const prevStart = new Date(bounds.start);
@@ -268,15 +286,16 @@ export async function getFinanceDayMetrics(
     overdueRows,
   ] = await Promise.all([
     prisma.payment.aggregate({
-      where: { paymentDate: { gte: bounds.start, lt: bounds.end } },
+      where: { ...(scope ? paymentTenantWhere(scope) : {}), paymentDate: { gte: bounds.start, lt: bounds.end } },
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
-      where: { paymentDate: { gte: prevStart, lt: prevEnd } },
+      where: { ...(scope ? paymentTenantWhere(scope) : {}), paymentDate: { gte: prevStart, lt: prevEnd } },
       _sum: { amount: true },
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { not: 'CANCELLED' },
         issueDate: { gte: bounds.start, lt: bounds.end },
       },
@@ -284,6 +303,7 @@ export async function getFinanceDayMetrics(
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { not: 'CANCELLED' },
         issueDate: { gte: prevStart, lt: prevEnd },
       },
@@ -291,6 +311,7 @@ export async function getFinanceDayMetrics(
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { notIn: ['PAID', 'CANCELLED'] },
         amountDue: { gt: 0 },
         dueDate: { gte: bounds.start, lt: bounds.end },
@@ -299,6 +320,7 @@ export async function getFinanceDayMetrics(
     }),
     prisma.invoice.aggregate({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { notIn: ['PAID', 'CANCELLED'] },
         amountDue: { gt: 0 },
         dueDate: { gte: prevStart, lt: prevEnd },
@@ -306,15 +328,16 @@ export async function getFinanceDayMetrics(
       _sum: { amountDue: true },
     }),
     prisma.payment.findMany({
-      where: { paymentDate: { gte: bounds.start, lt: bounds.end } },
+      where: { ...(scope ? paymentTenantWhere(scope) : {}), paymentDate: { gte: bounds.start, lt: bounds.end } },
       select: { amount: true, invoice: { select: { total: true, tax: true } } },
     }),
     prisma.payment.findMany({
-      where: { paymentDate: { gte: prevStart, lt: prevEnd } },
+      where: { ...(scope ? paymentTenantWhere(scope) : {}), paymentDate: { gte: prevStart, lt: prevEnd } },
       select: { amount: true, invoice: { select: { total: true, tax: true } } },
     }),
     prisma.invoice.findMany({
       where: {
+        ...(scope ? invoiceTenantWhere(scope) : {}),
         status: { in: ['FINAL', 'PARTIALLY_PAID'] },
         amountDue: { gt: 0 },
       },

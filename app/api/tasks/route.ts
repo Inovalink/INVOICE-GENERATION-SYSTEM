@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   try {
     const userId = await getDefaultUserId();
     if (!userId) {
-      return NextResponse.json({ message: 'No user in system' }, { status: 500 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
   try {
     const userId = await getDefaultUserId();
     if (!userId) {
-      return NextResponse.json({ message: 'No user in system' }, { status: 500 });
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
     const body = await request.json();

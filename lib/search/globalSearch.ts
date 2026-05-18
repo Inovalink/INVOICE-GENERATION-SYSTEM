@@ -1,5 +1,13 @@
 import type { InvoiceStatus, Prisma, PrismaClient } from '@prisma/client';
 import { formatGhs } from '@/lib/formatGhs';
+import {
+  clientTenantWhere,
+  invoiceTenantWhere,
+  paymentTenantWhere,
+  receiptTenantWhere,
+  serviceTenantWhere,
+  type TenantScope,
+} from '@/lib/auth/tenantScope';
 
 export type SearchSuggestion = {
   id: string;
@@ -15,6 +23,7 @@ const clampLimit = (n: number) => Math.min(25, Math.max(1, Math.floor(n)));
 type SearchFilterOptions = {
   from?: Date;
   to?: Date;
+  scope?: TenantScope;
 };
 
 function normalizeLower(input: string): string {
@@ -68,6 +77,12 @@ export async function searchSuggestions(
 
   const limit = clampLimit(limitTotal);
   const perKind = Math.max(4, Math.ceil(limit / 6));
+  const invoiceScope = filters?.scope ? invoiceTenantWhere(filters.scope) : {};
+  const clientScope = filters?.scope ? clientTenantWhere(filters.scope) : {};
+  const serviceScope = filters?.scope ? serviceTenantWhere(filters.scope) : {};
+  const paymentScope = filters?.scope ? paymentTenantWhere(filters.scope) : {};
+  const receiptScope = filters?.scope ? receiptTenantWhere(filters.scope) : {};
+  const taskScope = filters?.scope ? { userId: filters.scope.userId } : {};
 
   // Single-char queries use prefix (startsWith) to avoid matching everything;
   // multi-char queries use contains for broader fuzzy matching.
@@ -121,7 +136,7 @@ export async function searchSuggestions(
   const [invoices, clients, services, tasks, payments, receipts] = await Promise.all([
     prisma.invoice.findMany({
       where: {
-        AND: [{ OR: invoiceOr }, dateRange('issueDate', filters) ?? {}],
+        AND: [invoiceScope, { OR: invoiceOr }, dateRange('issueDate', filters) ?? {}],
       },
       take: Math.max(perKind * 2, 10),
       orderBy: { createdAt: 'desc' },
@@ -130,6 +145,7 @@ export async function searchSuggestions(
     prisma.client.findMany({
       where: {
         AND: [
+          clientScope,
           {
             OR: prefix
               ? [{ name: { startsWith: q } }, { company: { startsWith: q } }]
@@ -144,6 +160,7 @@ export async function searchSuggestions(
     prisma.service.findMany({
       where: {
         AND: [
+          serviceScope,
           {
             OR: prefix
               ? [{ name: { startsWith: q } }, { category: { startsWith: q } }]
@@ -157,7 +174,7 @@ export async function searchSuggestions(
     }),
     prisma.task.findMany({
       where: {
-        AND: [{ title: prefix ? { startsWith: q } : { contains: q } }, dateRange('dueDate', filters) ?? {}],
+        AND: [taskScope, { title: prefix ? { startsWith: q } : { contains: q } }, dateRange('dueDate', filters) ?? {}],
       },
       take: perKind,
       orderBy: { dueDate: 'asc' },
@@ -165,6 +182,7 @@ export async function searchSuggestions(
     prisma.payment.findMany({
       where: {
         AND: [
+          paymentScope,
           {
             OR: prefix
               ? [
@@ -188,6 +206,7 @@ export async function searchSuggestions(
     prisma.receipt.findMany({
       where: {
         AND: [
+          receiptScope,
           {
             OR: prefix
               ? [

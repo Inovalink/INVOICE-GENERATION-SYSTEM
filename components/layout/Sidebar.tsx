@@ -201,6 +201,23 @@ export default function Sidebar({
               </Link>
             </li>
 
+            {/* Logout — authenticated users */}
+            {authMe?.authenticated && (
+              <li className="sidebar-nav__item">
+                <button
+                  type="button"
+                  className="nav-link nav-link--button nav-link--logout"
+                  title={railCollapsed ? 'Logout' : undefined}
+                  onClick={logout}
+                >
+                  <span className="nav-icon-wrap" aria-hidden>
+                    <LogOut size={iconSize} strokeWidth={1.85} />
+                  </span>
+                  <span className="nav-link__label">Logout</span>
+                </button>
+              </li>
+            )}
+
             {/* Auth links for unauthenticated users */}
             {!authMe?.authenticated && (
               <>

@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { invoiceTenantWhere, scopeFromContext } from '@/lib/auth/tenantScope';
 import { indexInvoiceById } from '@/lib/search/invoiceSearch';
 import { prisma } from '@/lib/prisma';
 
@@ -8,10 +10,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   try {
     const resolvedParams = await params;
     const invoiceId = resolvedParams.id;
+    const ctx = await getCurrentContext();
+    if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const scope = scopeFromContext(ctx);
 
     // Check if invoice exists and is PROFORMA
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: invoiceId }
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: invoiceId, ...invoiceTenantWhere(scope) }
     });
 
     if (!invoice) {

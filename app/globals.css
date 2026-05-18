@@ -802,3 +802,55 @@ tr:last-child td {
     background: #fff !important;
   }
 }
+
+/* ── Page skeleton / loading states ──────────────────────── */
+@keyframes sk-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.sk-page { padding: 1.5rem 1.75rem; display: flex; flex-direction: column; gap: 1.25rem; }
+.sk-line  {
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--border-color) 80%, var(--text-secondary));
+  animation: sk-pulse 1.6s ease-in-out infinite;
+}
+.sk-line--title  { height: 1.5rem; width: 38%; }
+.sk-line--sub    { height: 1rem;   width: 55%; }
+.sk-line--full   { height: 1rem;   width: 100%; }
+.sk-line--wide   { height: 1rem;   width: 80%; }
+.sk-line--mid    { height: 1rem;   width: 55%; }
+.sk-line--short  { height: 1rem;   width: 30%; }
+
+.sk-card {
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: var(--card);
+  padding: 1.25rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+.sk-cards-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
+
+.sk-table { border-radius: 12px; border: 1px solid var(--border-color); background: var(--card); overflow: hidden; }
+.sk-table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr;
+  gap: 1rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+}
+.sk-table-row:last-child { border-bottom: none; }
+.sk-table-header .sk-line { opacity: 0.5; }
+
+.sk-header-row { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.sk-btn { height: 2.25rem; width: 7.5rem; border-radius: 8px; background: color-mix(in srgb, var(--border-color) 80%, var(--text-secondary)); animation: sk-pulse 1.6s ease-in-out infinite; }
+
+.sk-list { display: flex; flex-direction: column; gap: 0.6rem; }
+.sk-list-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--card); }
+.sk-avatar { width: 2.2rem; height: 2.2rem; border-radius: 50%; flex-shrink: 0; background: color-mix(in srgb, var(--border-color) 80%, var(--text-secondary)); animation: sk-pulse 1.6s ease-in-out infinite; }
+.sk-list-body { flex: 1; display: flex; flex-direction: column; gap: 0.4rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-line, .sk-btn, .sk-avatar { animation: none; opacity: 0.6; }
+}

@@ -4,6 +4,8 @@ import {
   isTopSellingSort,
   type TopSellingLimit,
 } from '@/lib/topSellingProducts';
+import { getCurrentContext } from '@/lib/auth/getCurrentUser';
+import { scopeFromContext } from '@/lib/auth/tenantScope';
 import { prisma } from '@/lib/prisma';
 
 export const dynamic = 'force-dynamic';
@@ -20,9 +22,12 @@ export async function GET(request: Request) {
 
   const sort = isTopSellingSort(sortRaw) ? sortRaw : 'revenue';
   const limit = parseLimit(limitRaw);
+  const ctx = await getCurrentContext();
+  if (!ctx) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+  const scope = scopeFromContext(ctx);
 
   try {
-    const products = await getTopSellingProducts(prisma, { sort, limit });
+    const products = await getTopSellingProducts(prisma, { sort, limit, scope });
     return NextResponse.json({ sort, limit, products });
   } catch (e) {
     console.error('top-selling-products', e);

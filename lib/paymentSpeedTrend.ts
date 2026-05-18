@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { invoiceTenantWhere, type TenantScope } from '@/lib/auth/tenantScope';
 import {
   endOfWeek,
   format,
@@ -62,9 +63,9 @@ function labelForBucket(bucketStart: Date, granularity: PaymentSpeedTrendGranula
  */
 export async function getPaymentSpeedTrendSeries(
   prisma: PrismaClient,
-  options: { granularity: PaymentSpeedTrendGranularity },
+  options: { granularity: PaymentSpeedTrendGranularity; scope?: TenantScope },
 ): Promise<PaymentSpeedTrendPoint[]> {
-  const { granularity } = options;
+  const { granularity, scope } = options;
   const now = new Date();
 
   const windowStart =
@@ -73,7 +74,7 @@ export async function getPaymentSpeedTrendSeries(
       : startOfWeek(subWeeks(now, 51), { weekStartsOn: 1 });
 
   const invoices = await prisma.invoice.findMany({
-    where: { status: 'PAID' },
+    where: { ...(scope ? invoiceTenantWhere(scope) : {}), status: 'PAID' },
     select: {
       issueDate: true,
       payments: { select: { paymentDate: true } },

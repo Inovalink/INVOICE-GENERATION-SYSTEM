@@ -1,4 +1,5 @@
 import type { PrismaClient } from '@prisma/client';
+import { paymentTenantWhere, type TenantScope } from '@/lib/auth/tenantScope';
 import {
   eachDayOfInterval,
   eachMonthOfInterval,
@@ -112,6 +113,7 @@ function bucketKeyFromStart(bucketStart: Date, granularity: RevenueGranularity):
 export async function getRevenueTrendSeries(
   prisma: PrismaClient,
   granularity: RevenueGranularity,
+  scope?: TenantScope,
 ): Promise<RevenueTrendPoint[]> {
   const now = new Date();
   const bucketStarts = orderedBucketStarts(now, granularity);
@@ -122,6 +124,7 @@ export async function getRevenueTrendSeries(
 
   const payments = await prisma.payment.findMany({
     where: {
+      ...(scope ? paymentTenantWhere(scope) : {}),
       paymentDate: { gte: rangeStart, lte: rangeEnd },
     },
     select: { amount: true, paymentDate: true },
@@ -148,6 +151,7 @@ export async function getRevenueTrendSeriesEndingOnDay(
   prisma: PrismaClient,
   endDay: Date,
   numDays: number,
+  scope?: TenantScope,
 ): Promise<RevenueTrendPoint[]> {
   const end = startOfDay(endDay);
   const start = startOfDay(subDays(end, numDays - 1));
@@ -155,6 +159,7 @@ export async function getRevenueTrendSeriesEndingOnDay(
 
   const payments = await prisma.payment.findMany({
     where: {
+      ...(scope ? paymentTenantWhere(scope) : {}),
       paymentDate: { gte: start, lte: endOfDay(end) },
     },
     select: { amount: true, paymentDate: true },

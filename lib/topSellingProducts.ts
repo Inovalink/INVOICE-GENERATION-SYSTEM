@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import type { PrismaClient } from '@prisma/client';
+import type { TenantScope } from '@/lib/auth/tenantScope';
 
 export type TopSellingSort = 'revenue' | 'quantity';
 export type TopSellingLimit = 5 | 10;
@@ -22,6 +23,7 @@ export async function getTopSellingProducts(
     limit: TopSellingLimit;
     /** When set, only invoice line items on invoices issued in this half-open local day. */
     issueDay?: { start: Date; end: Date };
+    scope?: TenantScope;
   },
 ): Promise<TopSellingProduct[]> {
   const orderBy =
@@ -30,10 +32,17 @@ export async function getTopSellingProducts(
       : Prisma.sql`"totalQuantity" DESC`;
 
   const day = options.issueDay;
+  const scope = options.scope;
   const issueFilter =
     day === undefined
       ? Prisma.empty
       : Prisma.sql`AND inv."issueDate" >= ${day.start} AND inv."issueDate" < ${day.end}`;
+  const tenantFilter =
+    scope === undefined
+      ? Prisma.empty
+      : scope.workspaceId
+        ? Prisma.sql`AND (inv."workspaceId" = ${scope.workspaceId} OR inv."userId" = ${scope.userId})`
+        : Prisma.sql`AND inv."userId" = ${scope.userId}`;
 
   const rows = await prisma.$queryRaw<
     { productName: string; totalQuantity: unknown; totalRevenue: unknown }[]
@@ -57,6 +66,7 @@ export async function getTopSellingProducts(
       LEFT JOIN "Service" s ON ii."serviceId" = s.id
       INNER JOIN "Invoice" inv ON ii."invoiceId" = inv.id
       WHERE inv.status != 'CANCELLED'
+      ${tenantFilter}
       ${issueFilter}
       GROUP BY 1
     ) AS agg

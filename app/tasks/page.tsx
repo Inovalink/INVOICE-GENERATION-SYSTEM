@@ -1,7 +1,8 @@
 import TasksCalendar from './TasksCalendar';
+import { requireCurrentContext } from '@/lib/auth/tenantScope';
 
-export const dynamic = 'force-dynamic';
 
-export default function TasksPage() {
+export default async function TasksPage() {
+  await requireCurrentContext();
   return <TasksCalendar />;
 }

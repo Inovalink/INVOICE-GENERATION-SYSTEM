@@ -50,6 +50,8 @@ model Workspace {
 
   members  WorkspaceMember[]
   invoices Invoice[]
+  clients  Client[]
+  services Service[]
 }
 
 model WorkspaceMember {
@@ -68,18 +70,25 @@ model WorkspaceMember {
 
 model Client {
   id        String    @id @default(uuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
   name      String
   company   String?
   phone     String?
-  email     String?   @unique
+  email     String?
   address   String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   invoices  Invoice[]
+
+  @@index([workspaceId])
+  @@index([workspaceId, email])
 }
 
 model Service {
   id          String        @id @default(uuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
   name        String
   category    String
   description String?
@@ -88,6 +97,8 @@ model Service {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   items       InvoiceItem[]
+
+  @@index([workspaceId])
 }
 
 model Invoice {
@@ -119,6 +130,8 @@ model Invoice {
   payments             Payment[]
   receipt              Receipt?
 
+  @@index([userId])
+  @@index([workspaceId])
   @@index([createdAt])
   @@index([issueDate])
   @@index([dueDate])
@@ -229,4 +242,14 @@ model SignupOtpVerification {
 
   @@index([expiresAt])
   @@index([verifiedUntil])
+}
+
+model PasswordResetToken {
+  email     String   @id
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expiresAt])
 }

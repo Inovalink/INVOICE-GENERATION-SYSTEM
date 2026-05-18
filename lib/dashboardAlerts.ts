@@ -5,6 +5,7 @@ import {
   type OverdueRiskLevel,
 } from '@/lib/invoiceDue';
 import { formatGhs } from '@/lib/formatGhs';
+import { invoiceTenantWhere, paymentTenantWhere, receiptTenantWhere, type TenantScope } from '@/lib/auth/tenantScope';
 
 export type DashboardAlertIconVariant = 'bill' | 'chart' | 'card' | 'coin' | 'flag' | 'shield';
 
@@ -38,12 +39,15 @@ function daysUntilDue(dueDate: Date, now: Date): number {
 
 export async function buildDashboardAlerts(
   prisma: PrismaClient,
-  options?: { dayBounds?: { start: Date; end: Date }; dismissedAlertIds?: Set<string> },
+  options?: { dayBounds?: { start: Date; end: Date }; dismissedAlertIds?: Set<string>; scope?: TenantScope },
 ): Promise<DashboardAlertRow[]> {
   const now = new Date();
   const startToday = startOfLocalDay(now);
   const endToday = new Date(startToday.getTime() + 24 * 60 * 60 * 1000);
   const day = options?.dayBounds ?? { start: startToday, end: endToday };
+  const invoiceScope = options?.scope ? invoiceTenantWhere(options.scope) : {};
+  const paymentScope = options?.scope ? paymentTenantWhere(options.scope) : {};
+  const receiptScope = options?.scope ? receiptTenantWhere(options.scope) : {};
 
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -62,6 +66,7 @@ export async function buildDashboardAlerts(
   ] = await Promise.all([
     prisma.invoice.findMany({
       where: {
+        ...invoiceScope,
         status: { notIn: ['PAID', 'CANCELLED'] },
         amountDue: { gt: 0 },
         dueDate: { gte: day.start, lt: day.end },
@@ -72,13 +77,14 @@ export async function buildDashboardAlerts(
     }),
     prisma.invoice.findMany({
       where: {
+        ...invoiceScope,
         status: { in: ['FINAL', 'PARTIALLY_PAID', 'PROFORMA'] },
       },
       orderBy: { dueDate: 'asc' },
       include: { client: true },
     }),
     prisma.payment.findMany({
-      where: { paymentDate: { gte: day.start, lt: day.end } },
+      where: { ...paymentScope, paymentDate: { gte: day.start, lt: day.end } },
       orderBy: { paymentDate: 'desc' },
       take: 50,
       include: {
@@ -86,19 +92,19 @@ export async function buildDashboardAlerts(
       },
     }),
     prisma.invoice.findMany({
-      where: { createdAt: { gte: day.start, lt: day.end } },
+      where: { ...invoiceScope, createdAt: { gte: day.start, lt: day.end } },
       orderBy: { createdAt: 'desc' },
       take: 20,
       include: { client: true },
     }),
     prisma.receipt.findMany({
-      where: { createdAt: { gte: day.start, lt: day.end } },
+      where: { ...receiptScope, createdAt: { gte: day.start, lt: day.end } },
       orderBy: { createdAt: 'desc' },
       take: 15,
       include: { invoice: true },
     }),
     prisma.invoice.findMany({
-      where: { status: 'PAID', updatedAt: { gte: day.start, lt: day.end } },
+      where: { ...invoiceScope, status: 'PAID', updatedAt: { gte: day.start, lt: day.end } },
       orderBy: { updatedAt: 'desc' },
       take: 15,
       select: {
@@ -110,7 +116,7 @@ export async function buildDashboardAlerts(
       },
     }),
     prisma.invoice.findMany({
-      where: { updatedAt: { gte: day.start, lt: day.end } },
+      where: { ...invoiceScope, updatedAt: { gte: day.start, lt: day.end } },
       orderBy: { updatedAt: 'desc' },
       take: 20,
       select: {
@@ -124,11 +130,11 @@ export async function buildDashboardAlerts(
       },
     }),
     prisma.payment.aggregate({
-      where: { paymentDate: { gte: thisMonthStart, lt: nextMonthStart } },
+      where: { ...paymentScope, paymentDate: { gte: thisMonthStart, lt: nextMonthStart } },
       _sum: { amount: true },
     }),
     prisma.payment.aggregate({
-      where: { paymentDate: { gte: lastMonthStart, lt: thisMonthStart } },
+      where: { ...paymentScope, paymentDate: { gte: lastMonthStart, lt: thisMonthStart } },
       _sum: { amount: true },
     }),
   ]);

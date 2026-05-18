@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { connection } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { getCurrentContext, getSessionClaims } from '@/lib/auth/getCurrentUser';
+import { invoiceTenantWhere, scopeFromContext } from '@/lib/auth/tenantScope';
 import { Wallet, FileText, Clock, AlertTriangle, TrendingUp } from 'lucide-react';
 import { formatGhs } from '@/lib/formatGhs';
 import { formatUserDisplayName } from '@/lib/formatUserDisplayName';
@@ -78,7 +79,6 @@ const safeNumber = (value: unknown) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-export const dynamic = 'force-dynamic';
 
 type PageProps = {
   searchParams?: Promise<{ date?: string }>;
@@ -143,9 +143,14 @@ export default async function Home({ searchParams }: PageProps) {
 
   const session = await getSessionClaims();
   if (!session) {
-    redirect('/signup');
+    redirect('/login');
   }
   const context = await getCurrentContext();
+  if (!context) {
+    redirect('/login');
+  }
+  const scope = scopeFromContext(context);
+  const invoiceScope = invoiceTenantWhere(scope);
   const user = context?.user;
   const displayName =
     user && (user.firstName.trim() || user.lastName.trim())
@@ -171,22 +176,22 @@ export default async function Home({ searchParams }: PageProps) {
     const dismissedDate = localDateString(bounds.start);
     const [dayMetrics, initialTopSelling, dismissedRows, invoices, invoiceTotalCardData] =
       await Promise.all([
-        getFinanceDayMetrics(prisma, bounds),
-        getTopSellingProducts(prisma, { sort: 'revenue', limit: 10, issueDay: bounds }),
+        getFinanceDayMetrics(prisma, bounds, scope),
+        getTopSellingProducts(prisma, { sort: 'revenue', limit: 10, issueDay: bounds, scope }),
         prisma.dismissedAlert.findMany({
           where: { userId: session.sub, dismissedDate },
           select: { alertId: true },
         }),
         prisma.invoice.findMany({
-          where: { issueDate: issueDay },
+          where: { ...invoiceScope, issueDate: issueDay },
           orderBy: { createdAt: 'desc' },
           take: DASHBOARD_HOME_INVOICE_LIMIT,
           select: invoiceDashboardSelect,
         }),
-        getInvoiceTotalCardData(prisma),
+        getInvoiceTotalCardData(prisma, scope),
       ]);
     const dismissedIds = new Set(dismissedRows.map((r) => r.alertId));
-    const dashboardAlerts = await buildDashboardAlerts(prisma, { dayBounds: bounds, dismissedAlertIds: dismissedIds });
+    const dashboardAlerts = await buildDashboardAlerts(prisma, { dayBounds: bounds, dismissedAlertIds: dismissedIds, scope });
 
     const invoicesForClient = mapInvoicesForTable(invoices);
     const dm = dayMetrics;
@@ -305,21 +310,22 @@ export default async function Home({ searchParams }: PageProps) {
   const todayStr = localDateString(new Date());
   const [summary, initialTopSelling, dismissedRowsDefault, invoices, invoiceTotalCardData] =
     await Promise.all([
-      getFinanceSummaryMetrics(prisma),
-      getTopSellingProducts(prisma, { sort: 'revenue', limit: 10 }),
+      getFinanceSummaryMetrics(prisma, scope),
+      getTopSellingProducts(prisma, { sort: 'revenue', limit: 10, scope }),
       prisma.dismissedAlert.findMany({
         where: { userId: session.sub, dismissedDate: todayStr },
         select: { alertId: true },
       }),
       prisma.invoice.findMany({
+        where: invoiceScope,
         orderBy: { createdAt: 'desc' },
         take: DASHBOARD_HOME_INVOICE_LIMIT,
         select: invoiceDashboardSelect,
       }),
-      getInvoiceTotalCardData(prisma),
+      getInvoiceTotalCardData(prisma, scope),
     ]);
   const dismissedIdsDefault = new Set(dismissedRowsDefault.map((r) => r.alertId));
-  const dashboardAlerts = await buildDashboardAlerts(prisma, { dismissedAlertIds: dismissedIdsDefault });
+  const dashboardAlerts = await buildDashboardAlerts(prisma, { dismissedAlertIds: dismissedIdsDefault, scope });
 
   const invoicesForClient = mapInvoicesForTable(invoices);
   const sm = summary;

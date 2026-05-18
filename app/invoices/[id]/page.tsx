@@ -6,14 +6,16 @@ import PrintButton from '@/components/invoices/PrintButton';
 import ReceiptViewButton from '@/components/receipts/ReceiptViewButton';
 import { invoiceDisplayStatus } from '@/lib/invoiceDue';
 import { prisma } from '@/lib/prisma';
+import { invoiceTenantWhere, requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 
-export const dynamic = 'force-dynamic';
 
 export default async function InvoiceViewPage({ params }: { params: { id: string } }) {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
-  const invoice = await prisma.invoice.findUnique({
-    where: { id: params.id },
+  const invoice = await prisma.invoice.findFirst({
+    where: { id: params.id, ...invoiceTenantWhere(scope) },
     include: {
       client: true,
       receipt: true,

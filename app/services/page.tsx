@@ -1,15 +1,18 @@
 import Link from 'next/link';
 import { connection } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireCurrentContext, scopeFromContext, serviceTenantWhere } from '@/lib/auth/tenantScope';
 import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import './services.css';
 
-export const dynamic = 'force-dynamic';
 
 export default async function ServicesPage() {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   const services = await prisma.service.findMany({
+    where: serviceTenantWhere(scope),
     orderBy: { category: 'asc' }
   });
 

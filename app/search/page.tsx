@@ -13,10 +13,10 @@ import {
 } from 'lucide-react';
 import { prisma } from '@/lib/prisma';
 import { searchSuggestions } from '@/lib/search/globalSearch';
+import { requireCurrentContext, scopeFromContext } from '@/lib/auth/tenantScope';
 import SearchDateFilters from './SearchDateFilters';
 import './search.css';
 
-export const dynamic = 'force-dynamic';
 
 type Props = {
   searchParams?: Promise<{ query?: string; from?: string; to?: string }>;
@@ -84,6 +84,8 @@ function toneForSuggestion(kind: string, subLabel?: string): string {
 
 export default async function SearchPage({ searchParams }: Props) {
   await connection();
+  const context = await requireCurrentContext();
+  const scope = scopeFromContext(context);
 
   const sp = (await searchParams) ?? {};
   const query = (sp.query ?? '').trim();
@@ -98,6 +100,7 @@ export default async function SearchPage({ searchParams }: Props) {
       ? await searchSuggestions(prisma, query, 40, {
           from: hasValidFrom ? fromDate : undefined,
           to: hasValidTo ? toDate : undefined,
+          scope,
         })
       : [];
 

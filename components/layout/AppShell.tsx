@@ -68,7 +68,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         setAuthMe={setAuthMe}
       />
       <main className="main-content">
-        <Topbar showSidebarToggle={isMobile} onToggleSidebar={onToggleMobileSidebar} />
+        <Topbar showSidebarToggle={isMobile} onToggleSidebar={onToggleMobileSidebar} authMe={authMe} />
         <div className="page-container">{children}</div>
       </main>
       <Suspense fallback={null}>
